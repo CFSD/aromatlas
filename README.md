@@ -1,2 +1,2 @@
-# aromatlas.github.io
+# Aromatlas
 Générateur de fiches de dégustation de whisky.
