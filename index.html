@@ -1,162 +1,1518 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="light">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Aromatlas – Fiche de dégustation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Aromatlas – Fiche de dégustation</title>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-
-  <link rel="stylesheet" href="styles/style.css">
-  <link rel="stylesheet" href="styles/atlas.css">
-  <link rel="stylesheet" href="styles/rating-flat.css">
-  <script src="scripts/rating-flat.js" defer></script>
   <link rel="icon" type="image/png" href="img/ico.png">
+
+  <!-- Tailwind v4 via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+  <!-- Chart.js et html2pdf pour le radar et l’export PDF -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+
+      /* Palette claire par défaut */
+      --color-bg: #f5f5f7;
+      --color-bg-gradient: radial-gradient(circle at top, #e5e7eb, #f5f5f7 45%, #e5e7eb 100%);
+      --color-surface: rgba(255, 255, 255, 0.98);
+      --color-surface-soft: rgba(255, 255, 255, 0.94);
+      --color-border-subtle: rgba(148, 163, 184, 0.28);
+      --color-text: #020617;
+      --color-muted: #6b7280;
+      --color-accent: #2563eb;
+      --color-accent-soft: rgba(37, 99, 235, 0.12);
+      --shadow-elevated: 0 24px 60px rgba(15, 23, 42, 0.14);
+      --radius-lg: 22px;
+      --radius-md: 14px;
+      --radius-pill: 999px;
+      --glass-surface: rgba(255, 255, 255, 0.86);
+      --glass-blur: blur(22px);
+
+      /* Couleur pour les badges d’arômes */
+      --accent1: #fbbf24;
+
+      /* Pont avec les anciens noms de variables utilisés dans la palette */
+      --background: var(--color-bg-gradient);
+      --card-bg: var(--color-surface-soft);
+      --text: var(--color-text);
+      --muted: var(--color-muted);
+      --accent: var(--color-accent);
+      --glass-bg: var(--glass-surface);
+      --card: var(--color-surface-soft);
+      --ink: var(--color-text);
+      --line: var(--color-border-subtle);
+    }
+
+    /* Thème foncé automatique */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-bg: #020617;
+        --color-bg-gradient: radial-gradient(circle at top, #0f172a, #020617 52%, #000000 100%);
+        --color-surface: rgba(15, 23, 42, 0.98);
+        --color-surface-soft: rgba(15, 23, 42, 0.96);
+        --color-border-subtle: rgba(148, 163, 184, 0.35);
+        --color-text: #e5e7eb;
+        --color-muted: #9ca3af;
+        --color-accent: #38bdf8;
+        --color-accent-soft: rgba(56, 189, 248, 0.18);
+        --shadow-elevated: 0 26px 70px rgba(0, 0, 0, 0.8);
+        --glass-surface: rgba(15, 23, 42, 0.9);
+
+        --background: var(--color-bg-gradient);
+        --card-bg: var(--color-surface-soft);
+        --text: var(--color-text);
+        --muted: var(--color-muted);
+        --accent: var(--color-accent);
+        --glass-bg: var(--glass-surface);
+        --card: var(--color-surface-soft);
+        --ink: var(--color-text);
+        --line: var(--color-border-subtle);
+      }
+    }
+
+    /* Overrides explicites */
+    :root[data-theme="light"] {
+      --color-bg: #f5f5f7;
+      --color-bg-gradient: radial-gradient(circle at top, #e5e7eb, #f5f5f7 45%, #e5e7eb 100%);
+      --color-surface: rgba(255, 255, 255, 0.98);
+      --color-surface-soft: rgba(255, 255, 255, 0.94);
+      --color-border-subtle: rgba(148, 163, 184, 0.26);
+      --color-text: #020617;
+      --color-muted: #6b7280;
+      --color-accent: #2563eb;
+      --color-accent-soft: rgba(37, 99, 235, 0.12);
+      --shadow-elevated: 0 22px 60px rgba(15, 23, 42, 0.16);
+      --glass-surface: rgba(255, 255, 255, 0.9);
+      --glass-blur: blur(22px);
+
+      --background: var(--color-bg-gradient);
+      --card-bg: var(--color-surface-soft);
+      --text: var(--color-text);
+      --muted: var(--color-muted);
+      --accent: var(--color-accent);
+      --glass-bg: var(--glass-surface);
+      --card: var(--color-surface-soft);
+      --ink: var(--color-text);
+      --line: var(--color-border-subtle);
+    }
+    :root[data-theme="dark"] {
+      --color-bg: #020617;
+      --color-bg-gradient: radial-gradient(circle at top, #0f172a, #020617 52%, #000000 100%);
+      --color-surface: rgba(15, 23, 42, 0.98);
+      --color-surface-soft: rgba(15, 23, 42, 0.96);
+      --color-border-subtle: rgba(148, 163, 184, 0.4);
+      --color-text: #e5e7eb;
+      --color-muted: #9ca3af;
+      --color-accent: #38bdf8;
+      --color-accent-soft: rgba(56, 189, 248, 0.18);
+      --shadow-elevated: 0 26px 72px rgba(0, 0, 0, 0.85);
+      --glass-surface: rgba(15, 23, 42, 0.9);
+
+      --background: var(--color-bg-gradient);
+      --card-bg: var(--color-surface-soft);
+      --text: var(--color-text);
+      --muted: var(--color-muted);
+      --accent: var(--color-accent);
+      --glass-bg: var(--glass-surface);
+      --card: var(--color-surface-soft);
+      --ink: var(--color-text);
+      --line: var(--color-border-subtle);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, -system-ui, 'Segoe UI', Roboto, sans-serif;
+      background: var(--color-bg-gradient, var(--color-bg));
+      color: var(--color-text);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      overflow-x: hidden;
+      scroll-behavior: smooth;
+      transition: background 0.28s ease, color 0.2s ease;
+    }
+
+    body, .card, .app-header, .overlay, .palette {
+      transition: background-color 0.25s ease, background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 clamp(12px, 4vw, 24px) 32px;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* ---------- En-tête ---------- */
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 16px;
+      margin: 0 -4px 4px;
+      border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+      background: linear-gradient(120deg, rgba(255, 255, 255, 0.8), rgba(248, 250, 252, 0.9));
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 20px 55px rgba(15, 23, 42, 0.18);
+    }
+    :root[data-theme="dark"] .app-header {
+      background: linear-gradient(120deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.96));
+      border-color: rgba(148, 163, 184, 0.5);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      object-fit: contain;
+      flex-shrink: 0;
+      box-shadow: 0 10px 20px rgba(15, 23, 42, 0.28);
+    }
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .title {
+      margin: 0;
+      font-size: clamp(19px, 2.1vw, 22px);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+    .subtitle {
+      margin: 0;
+      font-size: 12px;
+      color: var(--color-muted);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      background: rgba(148, 163, 184, 0.04);
+      color: var(--color-text);
+      transition: background 0.16s ease, color 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, transform 0.09s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn .icon {
+      font-size: 15px;
+      line-height: 1;
+    }
+    .btn.primary {
+      background: linear-gradient(135deg, var(--color-accent) 0%, #1d4ed8 100%);
+      color: #ffffff;
+      box-shadow: 0 12px 26px rgba(37, 99, 235, 0.55);
+      border-color: rgba(15, 23, 42, 0.16);
+    }
+    .btn.primary:hover {
+      transform: translateY(-0.5px);
+      box-shadow: 0 16px 32px rgba(37, 99, 235, 0.65);
+    }
+    .btn.secondary {
+      background: rgba(148, 163, 184, 0.08);
+      border-color: rgba(148, 163, 184, 0.45);
+      color: var(--color-text);
+    }
+    .btn.secondary:hover {
+      background: rgba(148, 163, 184, 0.16);
+    }
+    .btn.icon-only {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border-radius: 999px;
+      border-color: rgba(148, 163, 184, 0.6);
+      background: rgba(148, 163, 184, 0.1);
+      flex-shrink: 0;
+    }
+    .btn.icon-only .label {
+      display: none;
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 2px;
+    }
+    .btn:active {
+      transform: scale(0.97);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.25);
+    }
+
+    .btn.small {
+      padding: 6px 12px;
+      font-size: 13px;
+      border-radius: 999px;
+    }
+
+    .btn-ghost-accent {
+      background: var(--color-accent-soft);
+      color: var(--color-accent);
+      border-color: transparent;
+    }
+
+    .app-main {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      margin-top: 4px;
+    }
+
+    /* ---------- Cartes ---------- */
+    .card {
+      background: var(--color-surface-soft);
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(255, 255, 255, 0.54);
+      box-shadow: var(--shadow-elevated);
+      padding: clamp(16px, 3vw, 24px);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      backdrop-filter: var(--glass-blur);
+    }
+    :root[data-theme="dark"] .card {
+      border-color: rgba(148, 163, 184, 0.4);
+      background: radial-gradient(circle at top left, rgba(30, 64, 175, 0.12), rgba(15, 23, 42, 0.96));
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .card h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 650;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .card h2 .emoji {
+      font-size: 1.2em;
+    }
+
+    /* ---------- Formulaire d’informations ---------- */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px 18px;
+    }
+    .info-grid-item label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-muted);
+    }
+
+    .input,
+    .textarea {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--color-border-subtle);
+      background: var(--color-surface);
+      padding: 9px 12px;
+      font-size: 14px;
+      color: var(--color-text);
+      outline: none;
+      transition: border-color 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+    }
+    .input::placeholder,
+    .textarea::placeholder {
+      color: var(--color-muted);
+      opacity: 0.8;
+    }
+    .input:focus,
+    .textarea:focus {
+      border-color: var(--color-accent);
+      box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.7);
+      background: var(--color-surface);
+    }
+    .textarea {
+      min-height: 96px;
+      resize: vertical;
+    }
+
+    .notes-block label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-muted);
+    }
+
+    .flags-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px 18px;
+      margin-top: 4px;
+    }
+    .checkbox-item {
+      position: relative;
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+      color: var(--color-text);
+      min-width: 0;
+    }
+    .checkbox-item input[type="checkbox"] {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .checkbox-item label {
+      position: relative;
+      padding-left: 52px;
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .checkbox-item label::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 44px;
+      height: 24px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.28);
+      transition: background 0.22s ease;
+    }
+    .checkbox-item label::after {
+      content: '';
+      position: absolute;
+      left: 3px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: #ffffff;
+      box-shadow: 0 3px 7px rgba(15, 23, 42, 0.35);
+      transition: transform 0.22s ease;
+    }
+    .checkbox-item input:checked + label::before {
+      background: var(--color-accent);
+    }
+    .checkbox-item input:checked + label::after {
+      transform: translate(20px, -50%);
+    }
+
+    /* ---------- Profil sensoriel ---------- */
+    .sensor-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      align-items: stretch;
+    }
+    .metrics {
+      flex: 1 1 260px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .metric-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .metric-row label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-muted);
+    }
+    .range-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .range-wrap output {
+      min-width: 24px;
+      text-align: right;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.35);
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      background: var(--color-accent);
+      box-shadow: 0 3px 7px rgba(15, 23, 42, 0.4);
+      cursor: pointer;
+      transition: background 0.16s ease, transform 0.08s ease;
+      margin-top: -6px; /* Alignement vertical chrome */
+    }
+    /* Correctif pour Chrome/Safari pour aligner le thumb sur la track */
+    input[type="range"]::-webkit-slider-runnable-track {
+        height: 4px;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.35);
+    }
+    input[type="range"]:active::-webkit-slider-thumb {
+      transform: scale(1.02);
+    }
+    input[type="range"]::-moz-range-track {
+      width: 100%;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.35);
+      outline: none;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      background: var(--color-accent);
+      box-shadow: 0 3px 7px rgba(15, 23, 42, 0.4);
+      cursor: pointer;
+      border: none;
+      transition: background 0.16s ease, transform 0.08s ease;
+    }
+
+    .radar-shell {
+      flex: 0 0 280px;
+      max-width: 100%;
+      min-height: 260px;
+      position: relative;
+    }
+    .radar-shell canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* ---------- Notation (Redesign) ---------- */
+    .score-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 24px;
+    }
+
+    .score-control {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .score-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .score-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+    .score-val-display {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--color-accent);
+      font-variant-numeric: tabular-nums;
+    }
+    .score-val-display span {
+      font-weight: 400;
+      color: var(--color-muted);
+      font-size: 13px;
+    }
+
+    .score-input-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border-subtle);
+      padding: 6px 8px;
+      border-radius: 999px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+
+    .score-btn {
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      color: var(--color-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      line-height: 1;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+    .score-btn:hover {
+      background: rgba(148, 163, 184, 0.15);
+      color: var(--color-text);
+    }
+    .score-btn:active {
+      background: rgba(148, 163, 184, 0.25);
+      transform: scale(0.92);
+    }
+    .score-btn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+
+    .score-slider {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 6px;
+      background: transparent; /* géré via JS pour le dégradé */
+      border-radius: 999px;
+      outline: none;
+      cursor: pointer;
+      position: relative;
+    }
+    /* Slider Track Styles */
+    .score-slider::-webkit-slider-runnable-track {
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.2);
+    }
+    .score-slider::-moz-range-track {
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.2);
+    }
+    
+    /* Slider Thumb Styles */
+    .score-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: white;
+      border: 2px solid var(--color-accent);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+      margin-top: -7px; /* (20 - 6) / 2 * -1 */
+      transition: transform 0.1s;
+    }
+    .score-slider::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: white;
+      border: 2px solid var(--color-accent);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+      border: none; /* Firefox border fix */
+      transition: transform 0.1s;
+    }
+    
+    .score-slider:active::-webkit-slider-thumb { transform: scale(1.15); }
+    .score-slider:active::-moz-range-thumb { transform: scale(1.15); }
+
+    .total-row {
+      margin-top: 10px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .total-label {
+      color: var(--color-muted);
+    }
+    .total-value {
+      padding: 4px 14px;
+      border-radius: 999px;
+      background: var(--color-accent);
+      color: #ffffff;
+      min-width: 90px;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    /* ---------- Arômes (chips) ---------- */
+    .aroma-controls {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      background: linear-gradient(120deg, var(--color-accent) 0%, #1d4ed8 100%);
+      color: #ffffff;
+      box-shadow: 0 6px 14px rgba(15, 23, 42, 0.4);
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+      max-width: 100%;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+    .chip:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 20px rgba(15, 23, 42, 0.4);
+    }
+
+    /* Couleurs par famille pour les pastilles */
+    .chip.fam-fruite { background: #fef3c7 !important; color: #92400e !important; }
+    .chip.fam-floral { background: #fce7f3 !important; color: #9d174d !important; }
+    .chip.fam-herbace { background: #dcfce7 !important; color: #166534 !important; }
+    .chip.fam-cereale { background: #f5ebe0 !important; color: #92400e !important; }
+    .chip.fam-queue { background: #e5e7eb !important; color: #374151 !important; }
+    .chip.fam-tourbe { background: #e5e7f0 !important; color: #111827 !important; }
+    .chip.fam-elevage { background: #fef3c7 !important; color: #854d0e !important; }
+
+    /* ---------- Overlay / Palette d’arômes ---------- */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(15, 23, 42, 0.65);
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 40px 16px;
+    }
+    .overlay[aria-hidden="false"],
+    .overlay.open {
+      display: flex;
+    }
+
+    .palette {
+      width: min(100%, 640px);
+      max-height: 80vh;
+      background: var(--glass-surface);
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.6);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      backdrop-filter: var(--glass-blur);
+      color: var(--color-text);
+    }
+
+    .palette .bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--color-border-subtle);
+      background: rgba(15, 23, 42, 0.02);
+    }
+    .palette .bar input {
+      flex: 1;
+      border-radius: 999px;
+      border: 1px solid var(--color-border-subtle);
+      background: var(--color-surface);
+      padding: 8px 12px;
+      font-size: 14px;
+      color: var(--color-text);
+      outline: none;
+    }
+    .palette .bar input::placeholder {
+      color: var(--color-muted);
+      opacity: 0.9;
+    }
+    .palette .bar input:focus {
+      border-color: var(--color-accent);
+      box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.7);
+      background: var(--color-surface);
+    }
+
+    .results {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 10px 10px;
+    }
+    .results .row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      padding: 6px 6px;
+      border-radius: 10px;
+      cursor: pointer;
+      position: relative;
+    }
+    .results .row:hover {
+      background: rgba(37, 99, 235, 0.08);
+    }
+
+    .results .row[aria-selected="true"] {
+      background: transparent;
+      color: inherit;
+    }
+    .results .row[aria-selected="true"]::after {
+      content: '';
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--color-muted);
+      opacity: 0.7;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+    }
+
+    .leaf-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--accent1);
+      color: #111827;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      max-width: 60%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .leaf-badge.fam-fruite { background: #fef3c7 !important; color: #92400e !important; }
+    .leaf-badge.fam-floral { background: #fce7f3 !important; color: #9d174d !important; }
+    .leaf-badge.fam-herbace { background: #dcfce7 !important; color: #166534 !important; }
+    .leaf-badge.fam-cereale { background: #f5ebe0 !important; color: #92400e !important; }
+    .leaf-badge.fam-queue { background: #e5e7eb !important; color: #374151 !important; }
+    .leaf-badge.fam-tourbe { background: #e5e7f0 !important; color: #111827 !important; }
+    .leaf-badge.fam-elevage { background: #fef3c7 !important; color: #854d0e !important; }
+
+    .path {
+      font-size: 12px;
+      color: var(--color-muted);
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      max-width: 40%;
+    }
+
+    /* Infobulle */
+    .tip {
+      position: fixed;
+      z-index: 1100;
+      max-width: 280px;
+      background: rgba(255, 255, 255, 0.96);
+      color: var(--color-text);
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      padding: 12px 14px;
+      font-size: 12px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(16px);
+      display: none;
+    }
+    .tip h4 {
+      margin: 0 0 6px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .tip h4 small {
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--color-muted);
+    }
+    .tip .line {
+      display: flex;
+      margin-bottom: 4px;
+    }
+    .tip .line .k {
+      flex: 0 0 80px;
+      font-weight: 600;
+      color: var(--color-muted);
+    }
+    .tip .line .v {
+      flex: 1;
+    }
+
+    /* ---------- PDF (gabarit caché) ---------- */
+    #pdfTemplate {
+      display: none;
+    }
+
+    .pdf-sheet {
+      background: #ffffff;
+      color: #111827;
+      padding: 32px 26px;
+      width: 190mm;
+      max-width: none;
+      margin: 0;
+      border-radius: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, 'Segoe UI', Roboto, sans-serif;
+      font-size: 12px;
+    }
+    .pdf-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid #e5e7eb;
+      margin-bottom: 16px;
+    }
+    .pdf-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      object-fit: contain;
+    }
+    .pdf-header-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .pdf-title {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+      color: #1d4ed8;
+    }
+    .pdf-subtitle {
+      margin: 0;
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    .pdf-info-section {
+      margin-bottom: 18px;
+    }
+    .pdf-info {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+    .pdf-info th,
+    .pdf-info td {
+      padding: 5px 6px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .pdf-info th {
+      background: #f9fafb;
+      color: #6b7280;
+      text-align: left;
+      font-weight: 600;
+    }
+    .pdf-info td {
+      color: #111827;
+    }
+
+    .pdf-flags {
+      margin-top: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      font-size: 10px;
+    }
+    .pdf-flags .flag {
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: #eff6ff;
+      border: 1px solid #dbeafe;
+      color: #1f2937;
+    }
+
+    .pdf-notes {
+      margin-bottom: 18px;
+    }
+    .pdf-notes h2 {
+      margin: 0 0 4px;
+      font-size: 13px;
+      color: #1d4ed8;
+    }
+    .pdf-notes p {
+      margin: 0;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      background: #f9fafb;
+      padding: 8px;
+      min-height: 50px;
+      white-space: pre-wrap;
+    }
+
+    .pdf-main {
+      display: flex;
+      gap: 16px;
+    }
+    .pdf-left {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .pdf-right {
+      flex: 1.2;
+      display: flex;
+      flex-direction: column;
+    }
+    .pdf-left h2,
+    .pdf-right h2 {
+      margin: 0 0 4px;
+      font-size: 13px;
+      color: #1d4ed8;
+    }
+
+    .pdf-aromas .chips {
+      margin-top: 4px;
+      gap: 4px;
+    }
+    .pdf-aromas .chip {
+      padding: 3px 7px;
+      font-size: 11px;
+      border-radius: 8px;
+      box-shadow: none;
+      background: #f3f4f6;
+      color: #111827;
+    }
+    .pdf-aromas .chip.fam-fruite { background: #fef3c7 !important; color: #92400e !important; }
+    .pdf-aromas .chip.fam-floral { background: #fce7f3 !important; color: #9d174d !important; }
+    .pdf-aromas .chip.fam-herbace { background: #dcfce7 !important; color: #166534 !important; }
+    .pdf-aromas .chip.fam-cereale { background: #f5ebe0 !important; color: #92400e !important; }
+    .pdf-aromas .chip.fam-queue { background: #e5e7eb !important; color: #374151 !important; }
+    .pdf-aromas .chip.fam-tourbe { background: #e5e7f0 !important; color: #111827 !important; }
+    .pdf-aromas .chip.fam-elevage { background: #fef3c7 !important; color: #854d0e !important; }
+
+    .pdf-radar img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      padding: 4px;
+      background: #ffffff;
+    }
+
+    .pdf-sections {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .pdf-section h3 {
+      margin: 0 0 2px;
+      font-size: 12px;
+      color: #1d4ed8;
+    }
+    .pdf-section .pdf-desc {
+      margin: 0 0 4px;
+      font-size: 10px;
+      color: #6b7280;
+      font-style: italic;
+    }
+    .pdf-section .criteria-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 3px 0;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 10px;
+    }
+    .criteria-row span:first-child {
+      flex: 1;
+    }
+    .criteria-row span:last-child {
+      flex: 0 0 auto;
+      text-align: right;
+      min-width: 60px;
+    }
+
+    .pdf-total {
+      margin-top: 8px;
+      padding-top: 6px;
+      border-top: 1px solid #e5e7eb;
+      text-align: right;
+      font-weight: 650;
+      font-size: 12px;
+      color: #1d4ed8;
+    }
+
+    /* ---------- Overlay de progression PDF ---------- */
+    .export-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 18px;
+      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.92));
+      backdrop-filter: blur(24px);
+    }
+    .export-overlay.open {
+      display: flex;
+    }
+    .export-panel {
+      width: min(420px, 100%);
+      border-radius: 24px;
+      background: var(--glass-surface);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+      padding: 18px 18px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      color: var(--color-text);
+    }
+    .export-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .export-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 20px;
+      background: radial-gradient(circle at 30% 20%, #eff6ff, #dbeafe);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #1d4ed8;
+      box-shadow: 0 12px 24px rgba(37, 99, 235, 0.55);
+      position: relative;
+      overflow: hidden;
+    }
+    .export-icon::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: conic-gradient(from 0deg, rgba(37, 99, 235, 0) 0deg, rgba(37, 99, 235, 0.28) 90deg, rgba(37, 99, 235, 0) 180deg);
+      animation: export-spin 1.4s linear infinite;
+      mix-blend-mode: multiply;
+    }
+    .export-icon span {
+      position: relative;
+      z-index: 1;
+      font-size: 20px;
+    }
+
+    @keyframes export-spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .export-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 650;
+    }
+    .export-subtitle {
+      margin: 0;
+      font-size: 13px;
+      color: var(--color-muted);
+    }
+
+    .export-progress {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .export-progress-bar {
+      width: 100%;
+      height: 5px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.35);
+      overflow: hidden;
+    }
+    .export-progress-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--color-accent), #38bdf8);
+      transition: width 0.35s ease-out;
+    }
+    .export-progress-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--color-muted);
+    }
+    .export-progress-value {
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    /* ---------- Utilitaires ---------- */
+    .text-muted {
+      color: var(--color-muted);
+    }
+    .hidden-xs {
+      display: inline;
+    }
+
+    @media (max-width: 480px) {
+      .hidden-xs {
+        display: none;
+      }
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 960px) {
+      .form-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .flags-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .app-header {
+        flex-wrap: wrap;
+        align-items: flex-start;
+      }
+      .header-right {
+        width: 100%;
+        justify-content: flex-start;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .app-shell {
+        padding-inline: 12px;
+      }
+      .app-header {
+        margin-inline: -8px;
+        border-radius: 0 0 20px 20px;
+        padding-inline: 12px;
+        gap: 10px;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .header-left {
+        width: 100%;
+        justify-content: flex-start;
+      }
+      .header-right {
+        width: 100%;
+        justify-content: flex-start;
+      }
+      .card {
+        padding: 14px 14px 16px;
+        border-radius: 18px;
+      }
+      .form-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .flags-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .sensor-grid {
+        flex-direction: column;
+      }
+      .radar-shell {
+        min-height: 220px;
+      }
+      .overlay {
+        padding: 20px 10px;
+      }
+      .palette {
+        width: 100%;
+        max-height: 80vh;
+        border-radius: 18px;
+      }
+      .btn {
+        padding-inline: 10px;
+      }
+      .export-overlay {
+        padding: 16px 12px;
+      }
+      .export-panel {
+        border-radius: 20px;
+        padding: 16px 14px 14px;
+      }
+    }
+
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+      }
+      .app-header,
+      .btn,
+      .overlay,
+      .tip,
+      .export-overlay {
+        display: none !important;
+      }
+      .app-shell {
+        padding: 0;
+        max-width: none;
+      }
+      .card {
+        box-shadow: none;
+        border-radius: 0;
+        border: none;
+        padding: 0;
+      }
+    }
+  </style>
 </head>
 <body>
-  <header class="app-header">
-    <div class="header-left">
-      <img src="img/ico.png" alt="Logo Aromatlas" class="logo">
-      <h1 class="title">Aromatlas</h1>
-    </div>
-    <div class="header-right">
-      <button id="exportPdf" class="btn primary"><span class="icon">🖨</span><span>Exporter PDF</span></button>
-      <button id="resetAll" class="btn secondary">Réinitialiser</button>
-    </div>
-  </header>
-
-  <main class="app">
-    <section class="card">
-      <h2><span class="emoji">ℹ️</span> Informations</h2>
-      <div class="form-grid info-grid">
-        <div>
-          <label for="fDate">Date</label>
-          <input id="fDate" type="date" class="input">
-          <script>
-            document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
-          </script>
-        </div>
-        <div>
-          <label for="fName">Nom</label>
-          <input id="fName" type="text" class="input" placeholder="Connoisseurs Choice">
-        </div>
-        <div>
-          <label for="fDistillery">Distillerie</label>
-          <input id="fDistillery" type="text" class="input" placeholder="Balblair Distillery">
-        </div>
-        <div>
-          <label for="fBottler">Embouteilleur</label>
-          <input id="fBottler" type="text" class="input" placeholder="Gordon & MacPhail">
-        </div>
-        <div>
-          <label for="fAge">Âge</label>
-          <input id="fAge" type="text" class="input" placeholder="30 ans">
-        </div>
-        <div>
-          <label for="fVintage">Millésime</label>
-          <input id="fVintage" type="text" class="input" placeholder="1993">
-        </div>
-        <div>
-          <label for="fColor">Couleur</label>
-          <input id="fColor" type="text" class="input" placeholder="Sherry">
-        </div>
-        <div>
-          <label for="fAbv">ABV (%)</label>
-          <input id="fAbv" type="number" min="0" max="100" step="0.1" class="input" placeholder="54.2">
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="header-left">
+        <img src="img/ico.png" alt="Logo Aromatlas" class="logo">
+        <div class="title-block">
+          <h1 class="title">Aromatlas</h1>
+          <p class="subtitle">Fiche de dégustation</p>
         </div>
       </div>
-      <div class="form-grid flags-grid">
-        <div class="checkbox-item">
-          <input id="fCask" type="checkbox"><label for="fCask">Brut de fût</label>
-        </div>
-        <div class="checkbox-item">
-          <input id="fSingle" type="checkbox"><label for="fSingle">Fût unique</label>
-        </div>
-        <div class="checkbox-item">
-          <input id="fNcf" type="checkbox"><label for="fNcf">Non filtré à froid</label>
-        </div>
-        <div class="checkbox-item">
-          <input id="fNoCol" type="checkbox"><label for="fNoCol">Non coloré</label>
-        </div>
+      <div class="header-right">
+        <button id="themeToggle" class="btn icon-only" type="button" aria-label="Basculer le thème">
+          <span class="icon theme-icon">🌙</span>
+          <span class="label">Thème</span>
+        </button>
+        <button id="exportPdf" class="btn primary" type="button">
+          <span class="icon">🖨</span>
+          <span class="hidden-xs">Exporter PDF</span>
+        </button>
+        <button id="resetAll" class="btn secondary" type="button">Réinitialiser</button>
       </div>
-      <div class="notes-block">
-        <label for="fNotes">Notes (libres)</label>
-        <textarea id="fNotes" class="textarea" placeholder="Premières impressions, contexte…"></textarea>
-      </div>
-    </section>
+    </header>
 
-    <!-- Notation -->
-    <section class="card">
-      <h2><span class="emoji">📝</span> Notation</h2>
-      <div id="scoreControls" class="score-grid"></div>
-      <div class="total-row">
-        <span>Total :</span><span id="totalScore" class="total-value">0 / 100</span>
-      </div>
-    </section>    
-
-    <section class="card">
-      <h2><span class="emoji">📊</span> Profil sensoriel</h2>
-      <div class="sensor-grid">
-        <div id="metricControls" class="metrics"></div>
-        <div class="radar-wrapper">
-          <canvas id="radarChart" width="300" height="300" aria-label="Radar sensoriel" role="img"></canvas>
+    <main class="app-main">
+      <!-- Informations principales -->
+      <section class="card" aria-labelledby="infoTitle">
+        <div class="card-header">
+          <h2 id="infoTitle"><span class="emoji">ℹ️</span> Informations</h2>
         </div>
-      </div>
-    </section>
+        <div class="form-grid info-grid">
+          <div class="info-grid-item">
+            <label for="fDate">Date</label>
+            <input id="fDate" type="date" class="input">
+          </div>
+          <div class="info-grid-item">
+            <label for="fName">Nom</label>
+            <input id="fName" type="text" class="input" placeholder="Connoisseurs Choice">
+          </div>
+          <div class="info-grid-item">
+            <label for="fDistillery">Distillerie</label>
+            <input id="fDistillery" type="text" class="input" placeholder="Balblair Distillery">
+          </div>
+          <div class="info-grid-item">
+            <label for="fBottler">Embouteilleur</label>
+            <input id="fBottler" type="text" class="input" placeholder="Gordon &amp; MacPhail">
+          </div>
+          <div class="info-grid-item">
+            <label for="fAge">Âge</label>
+            <input id="fAge" type="text" class="input" placeholder="30 ans">
+          </div>
+          <div class="info-grid-item">
+            <label for="fVintage">Millésime</label>
+            <input id="fVintage" type="text" class="input" placeholder="1993">
+          </div>
+          <div class="info-grid-item">
+            <label for="fColor">Couleur</label>
+            <input id="fColor" type="text" class="input" placeholder="Sherry">
+          </div>
+          <div class="info-grid-item">
+            <label for="fAbv">ABV (%)</label>
+            <input id="fAbv" type="number" min="0" max="100" step="0.1" class="input" placeholder="54.2">
+          </div>
+        </div>
 
-    <section class="card">
-      <h2><span class="emoji">🍋</span> Arômes identifiés</h2>
-      <div class="aroma-controls">
-        <button id="openPalette" class="btn small">Ajouter des arômes</button>
-      </div>
-      <div id="selectedAromas" class="chips"></div>
-    </section>
+        <div class="flags-grid" aria-label="Particularités" role="group">
+          <div class="checkbox-item">
+            <input id="fCask" type="checkbox">
+            <label for="fCask">Brut de fût</label>
+          </div>
+          <div class="checkbox-item">
+            <input id="fSingle" type="checkbox">
+            <label for="fSingle">Fût unique</label>
+          </div>
+          <div class="checkbox-item">
+            <input id="fNcf" type="checkbox">
+            <label for="fNcf">Non filtré à froid</label>
+          </div>
+          <div class="checkbox-item">
+            <input id="fNoCol" type="checkbox">
+            <label for="fNoCol">Non coloré</label>
+          </div>
+        </div>
 
-  </main>
+        <div class="notes-block">
+          <label for="fNotes">Notes (libres)</label>
+          <textarea id="fNotes" class="textarea" placeholder="Premières impressions, contexte…"></textarea>
+        </div>
+      </section>
 
+      <!-- Notation (Nouveau design) -->
+      <section class="card" aria-labelledby="scoreTitle">
+        <div class="card-header">
+          <h2 id="scoreTitle"><span class="emoji">📝</span> Notation</h2>
+        </div>
+        <div id="scoreControls" class="score-grid" aria-label="Critères de notation">
+          <!-- Injecté par JS -->
+        </div>
+        <div class="total-row" aria-live="polite">
+          <span class="total-label">Total :</span>
+          <span id="totalScore" class="total-value">0 / 100</span>
+        </div>
+      </section>
+
+      <!-- Profil sensoriel -->
+      <section class="card" aria-labelledby="sensorTitle">
+        <div class="card-header">
+          <h2 id="sensorTitle"><span class="emoji">📊</span> Profil sensoriel</h2>
+        </div>
+        <div class="sensor-grid">
+          <div id="metricControls" class="metrics" aria-label="Profil sensoriel"></div>
+          <div class="radar-shell" aria-hidden="false">
+            <canvas id="radarChart" aria-label="Radar sensoriel" role="img"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Arômes -->
+      <section class="card" aria-labelledby="aromaTitle">
+        <div class="card-header">
+          <h2 id="aromaTitle"><span class="emoji">🍋</span> Arômes identifiés</h2>
+        </div>
+        <div class="aroma-controls">
+          <button id="openPalette" class="btn btn-ghost-accent small" type="button">Ajouter des arômes</button>
+        </div>
+        <div id="selectedAromas" class="chips" aria-label="Arômes sélectionnés"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Palette d’arômes -->
   <div id="paletteOverlay" class="overlay" aria-hidden="true">
-    <div class="palette" role="dialog" aria-labelledby="paletteTitle">
+    <div class="palette" role="dialog" aria-modal="true" aria-labelledby="paletteTitle">
       <div class="bar">
         <input id="palSearch" type="text" placeholder="Rechercher un arôme…" aria-label="Rechercher un arôme">
         <button id="palClose" class="btn small secondary" type="button" aria-label="Fermer la palette">✕</button>
       </div>
-      <div id="palResults" class="results" role="listbox"></div>
+      <div id="palResults" class="results" role="listbox" aria-label="Liste d’arômes"></div>
     </div>
   </div>
 
+  <!-- Infobulle d’arôme -->
   <div id="tooltip" class="tip" role="tooltip" aria-hidden="true"></div>
 
+  <!-- Gabarit PDF caché -->
   <div id="pdfTemplate" aria-hidden="true">
-
     <div class="pdf-sheet">
       <header class="pdf-header">
         <img src="img/ico.png" alt="Logo Aromatlas" class="pdf-logo">
         <div class="pdf-header-text">
           <h1 class="pdf-title">Fiche de dégustation</h1>
-          <p class="pdf-subtitle">
-            PDF généré par Aromatlas le 
-            <script>document.write(new Date().toLocaleDateString('fr-FR'));</script>
-          </p>
+          <p class="pdf-subtitle">PDF généré par Aromatlas le <span id="pdfGeneratedOn"></span></p>
         </div>
       </header>
+
       <section class="pdf-info-section">
         <table class="pdf-info">
-          <tr><th>Date</th><td id="pdfDate"></td><th>Nom</th><td id="pdfName"></td></tr>
-          <tr><th>Distillerie</th><td id="pdfDistillery"></td><th>Embouteilleur</th><td id="pdfBottler"></td></tr>
-          <tr><th>Âge</th><td id="pdfAge"></td><th>Millésime</th><td id="pdfVintage"></td></tr>
-          <tr><th>Couleur</th><td id="pdfColor"></td><th>ABV (%)</th><td id="pdfAbv"></td></tr>
+          <tr>
+            <th>Date</th><td id="pdfDate"></td>
+            <th>Nom</th><td id="pdfName"></td>
+          </tr>
+          <tr>
+            <th>Distillerie</th><td id="pdfDistillery"></td>
+            <th>Embouteilleur</th><td id="pdfBottler"></td>
+          </tr>
+          <tr>
+            <th>Âge</th><td id="pdfAge"></td>
+            <th>Millésime</th><td id="pdfVintage"></td>
+          </tr>
+          <tr>
+            <th>Couleur</th><td id="pdfColor"></td>
+            <th>ABV (%)</th><td id="pdfAbv"></td>
+          </tr>
         </table>
-        <div class="pdf-flags" id="pdfFlags"></div>
+        <div id="pdfFlags" class="pdf-flags"></div>
       </section>
+
       <section class="pdf-notes">
         <h2>Notes</h2>
         <p id="pdfNotes"></p>
       </section>
+
       <section class="pdf-main">
         <div class="pdf-left">
           <div class="pdf-radar">
             <h2>Profil sensoriel</h2>
+            <!-- L'image sera générée en Light Mode forcé -->
             <img id="pdfRadar" alt="Profil sensoriel">
           </div>
           <div class="pdf-aromas">
@@ -167,14 +1523,1148 @@
         <div class="pdf-right">
           <h2>Notation</h2>
           <div id="pdfNoteSections" class="pdf-sections"></div>
-          <div class="pdf-total"><strong>Total :</strong> <span id="pdfTotal"></span></div>
+          <div class="pdf-total"><strong>Total :</strong> <span id="pdfTotal"></span></div>
         </div>
       </section>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="scripts/main.js"></script>
+  <!-- Overlay de progression PDF -->
+  <div id="exportOverlay" class="export-overlay" aria-hidden="true">
+    <div class="export-panel" role="status" aria-live="polite">
+      <div class="export-header">
+        <div class="export-icon">
+          <span>🖨</span>
+        </div>
+        <div>
+          <h2 class="export-title">Génération du PDF…</h2>
+          <p class="export-subtitle">Nous préparons une fiche nette et prête à être partagée.</p>
+        </div>
+      </div>
+      <div class="export-progress">
+        <div class="export-progress-bar">
+          <div class="export-progress-fill" id="exportProgressFill"></div>
+        </div>
+        <div class="export-progress-meta">
+          <span id="exportProgressLabel">Préparation de la fiche…</span>
+          <span class="export-progress-value" id="exportProgressValue">0%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // ---------------------- CONSTANTES / CONFIG ----------------------
+      const THEME_KEY = 'aromatlas-theme';
+
+      const METRICS = [
+        { key: 'douceur', label: 'Douceur' },
+        { key: 'fruit', label: 'Fruits' },
+        { key: 'bois', label: 'Bois' },
+        { key: 'fumee', label: 'Fumée' },
+        { key: 'epices', label: 'Épices' },
+        { key: 'amertume', label: 'Amertume' },
+        { key: 'salinite', label: 'Salinité' }
+      ];
+
+      const SCORE_CATEGORIES = [
+        { id: 'attrait', label: 'Attrait visuel', max: 5 },
+        { id: 'nezInt', label: 'Intensité & complexité (nez)', max: 15 },
+        { id: 'nezDist', label: 'Distinction des arômes', max: 10 },
+        { id: 'nezEq', label: 'Équilibre des arômes', max: 10 },
+        { id: 'palAlc', label: "Harmonie de l'alcool", max: 5 },
+        { id: 'palCorps', label: 'Corps en bouche', max: 5 },
+        { id: 'palEq', label: 'Équilibre des saveurs', max: 10 },
+        { id: 'palComplex', label: 'Complexité des saveurs', max: 10 },
+        { id: 'palDist', label: 'Distinction des saveurs', max: 10 },
+        { id: 'finLen', label: 'Longueur de la finale', max: 10 },
+        { id: 'finQual', label: 'Qualité de la finale', max: 10 }
+      ];
+
+      // ATLAS et INFO (conservés tels quels)
+      const ATLAS = {
+        'FRUITÉ': {
+          _fam: 'fruite',
+          Agrumes: ['citron', 'citron vert', 'orange', 'mandarine', 'pamplemousse'],
+          'Fruits tropicaux': ['ananas', 'mangue', 'banane', 'papaye', 'fruit de la passion', 'melon'],
+          'Fruits à pépins': ['pomme', 'pomme verte', 'poire', 'coing'],
+          'Fruits à noyau': ['pêche', 'abricot', 'prune', 'mirabelle'],
+          'Baies rouges': ['fraise', 'framboise', 'cassis', 'mûre', 'myrtille'],
+          'Fruits secs': ['raisin sec', 'pruneau', 'figue sèche', 'abricot sec', 'dattes']
+        },
+        FLORAL: {
+          _fam: 'floral',
+          'Notes florales': ["fleur d'oranger", 'rose', 'bruyère', 'géranium', 'lavande', 'violette']
+        },
+        HERBACÉ: {
+          _fam: 'herbace',
+          'Notes herbacées': ['herbe coupée', 'menthe', 'eucalyptus', 'genévrier', 'feuille de tabac', 'foin', 'thym', 'pin']
+        },
+        CÉRÉALE: {
+          _fam: 'cereale',
+          Torréfié: ['biscuit', 'toast', 'café', 'cacao', 'chocolat'],
+          Levures: ['pain frais', 'pâte levée', 'brioche', 'yaourt/fromage frais']
+        },
+        'QUEUE DE DISTILLATION': {
+          _fam: 'queue',
+          'Queue de distillation': ['huile minérale', 'cire de bougie / paraffine', 'beurre rance', 'savon', 'métallique', 'cuir', 'sac de jute']
+        },
+        TOURBÉ: {
+          _fam: 'tourbe',
+          Tourbé: ['fumé', 'tourbe', 'terre humide', "mousse d’arbre", 'médicinal', 'vieux bandage', 'bacon', 'goudron', 'caoutchouc', 'kérosène', 'silex', 'poisson / fruits de mer', 'iode', 'algue', 'soufre']
+        },
+        'ÉLEVAGE EN FÛT DE CHÊNE': {
+          _fam: 'elevage',
+          Boisé: ['chêne', 'cèdre', 'bois de santal', 'vanille', 'caramel', 'miel'],
+          Épicé: ['cannelle', 'girofle', 'gingembre', 'poivre', 'noix de muscade', 'cardamome'],
+          Vineux: ['sherry / xérès', 'madère', 'porto', 'vin rouge', 'sauternes'],
+          Noix: ['noix', 'noisette', 'amande', 'noix de coco', 'pralin', 'nougat']
+        }
+      };
+
+      const INFO = {
+        // EXISTANTS
+        banane: { classe: 'Esters (acétates)', composés: 'Acétate d’isoamyle', origine: 'Fermentation longue et chaude favorisant les esters fruités ; reflux doux à la distillation.', fut: 'Fûts bourbon 1er remplissage préservent ces esters ; trop d’extraction peut les estomper.', tips: 'Très fréquent dans certains single malts non tourbés.', styles: 'Irish Pot Still, Speyside jeune.' },
+        pomme: { classe: 'Esters (hexanoates/acétates)', composés: 'Hexanoate d’éthyle, acétate d’éthyle', origine: 'Levures produisant acides gras + éthanol ⇒ esters ; têtes larges accentuent l’acétate.', fut: 'Refill bourbon conserve la verdeur.', tips: 'S’apaise avec l’oxydation ; revient avec un trait d’eau.', styles: 'Lowlands, Speyside légers.' },
+        poire: { classe: 'Esters', composés: 'Acétate d’hexyle, butyrate d’éthyle', origine: 'Fermentation à basse T°, levures très estérifiantes.', fut: 'Refill bourbon ; certains vins doux renforcent la poire.', tips: 'Très volatil : ressenti surtout au nez.', styles: 'Speyside, Irish' },
+        ananas: { classe: 'Esters', composés: 'Butyrate/hexanoate d’éthyle', origine: 'Fermentation riche en acides gras ; distillation avec reflux.', fut: 'Bourbon & ex-rum finish amplifient.', tips: 'Avec noix de coco (lactones) ⇒ “pina colada”.', styles: 'Highlands fruités' },
+        citron: { classe: 'Terpènes / Aldéhydes', composés: 'Limonène, citral', origine: 'Congénères légers captés en têtes ; distillation propre.', fut: 'Refill/fort toast pour garder la vivacité.', tips: 'Parfois avec “pierre à fusil”.', styles: 'Maritime, Highlands' },
+        lavande: { classe: 'Terpènes', composés: 'Linalol', origine: 'Fermentation “propre”, distillation douce.', fut: 'Refill bourbon, sherry masque souvent ces notes.', tips: 'Fragile à l’oxydation en verre.', styles: 'Speyside' },
+        menthe: { classe: 'Terpènes / Phénols légers', composés: 'Menthol, eucalyptol', origine: 'Reflux + coupe serrée.', fut: 'American oak → “menthe-chocolat” avec cacao/furfural.', tips: 'Sensation fraîche.', styles: 'Bourbon cask' },
+        chocolat: { classe: 'Furannes / Pyrazines', composés: '5-Méthylfurfural, pyrazines', origine: 'Toast/char élevé ; Maillard des douelles.', fut: 'American oak fortement bousiné ; rechar/STR.', tips: 'Souvent avec café/cacao/biscuit.', styles: 'Sherry butt, STR' },
+        biscuit: { classe: 'Maillard', composés: 'Maltol, cyclotène', origine: 'Kilning/concassage ; distillation peu réductrice.', fut: 'Bourbon cask, toasts moyens.', tips: 'Texture maltée.', styles: 'Highlands' },
+        fumé: { classe: 'Phénols', composés: 'Gaïacol, crésols, syringol', origine: 'Malt séché à la tourbe ; ppm + coupe “cœur” = intensité.', fut: 'Rechar → fumé-sucré ; refill atténue.', tips: 'Fumée sèche (gaïacol) vs médicinal (p-crésol).', styles: 'Islay, Orkney' },
+        tourbe: { classe: 'Phénols / Terpènes', composés: 'Crésols, phénol, 4-éthylgaïacol', origine: 'Kilning tourbé ; distillation courte/huileuse.', fut: 'Refill pour pureté ; sherry = tourbe “gourmande”.', tips: 'Persistance rétro-olfactive longue.', styles: 'Islay, peated Highlands' },
+        médicinal: { classe: 'Phénols', composés: 'p-Crésol, gaïacol', origine: 'Tourbe côtière + worm tub ⇒ notes lourdes.', fut: 'Refill maintient l’aspect hôpital ; sherry arrondit.', tips: 'Souvent indice de coupe légèrement basse.', styles: 'South Islay' },
+        vanille: { classe: 'Aldéhydes phénoliques', composés: 'Vanilline', origine: 'Dégradation lignine (chauffe du chêne).', fut: 'Quercus alba 1er remplissage = boost vanille.', tips: 'Adoucit et arrondit.', styles: 'Bourbon cask & bourbon' },
+        caramel: { classe: 'Furannes', composés: 'Furfural, HMF', origine: 'Toast/char ; Maillard des sucres.', fut: 'Rechar/char élevé.', tips: 'Peut virer “brûlé” si sur-extraction.', styles: 'Bourbon & sherry' },
+        'noix de coco': { classe: 'Lactones', composés: 'β-methyl-γ-octalactone (cis/trans)', origine: 'Chêne américain riche en lactones.', fut: 'Bourbon 1er remplissage = coco/crème.', tips: 'Avec ananas ⇒ pina colada.', styles: 'Bourbon cask' },
+        cannelle: { classe: 'Aldéhydes / Phénols épicés', composés: 'Cinnamaldéhyde, eugénol', origine: 'Chêne européen + toast modéré.', fut: 'Sherry butt/hogshead européens.', tips: 'Épice sèche en finale.', styles: 'Sherry cask' },
+        noix: { classe: 'Aldéhydes oxydatifs', composés: 'Acétaldéhyde, sotolon', origine: 'Maturation oxydative (sherry) ; long vieillissement.', fut: 'Oloroso/PX ⇒ fruits secs & noix.', tips: 'Rancio si très âgé.', styles: 'Sherry matured' },
+
+        // AJOUTS (tout ATLAS manquant)
+        'citron vert': { classe: 'Terpènes / Aldéhydes', composés: 'Limonène, citral (géranial/néral)', origine: 'Congénères très volatils captés en têtes de distillation ; fermentation “propre” et reflux modéré favorisent la netteté.', fut: 'Refill bourbon ou toast léger pour préserver la fraîcheur ; fûts très extractifs l’estompent.', tips: 'Plus vif et “tranchant” que citron ; souvent perçu dès l’ouverture.', styles: 'Highlands maritimes, Lowlands légers.' },
+        orange: { classe: 'Terpènes / Esters légers', composés: 'd-Limonène, acétate d’hexyle', origine: 'Fermentations nettes + coupe plutôt haute (têtes) ; oxydation douce → écorce d’orange/confite.', fut: 'Sherry/porto → orange confite ; bourbon refill → zestes frais.', tips: 'Souvent avec miel/vanille en bouche.', styles: 'Highlands, Speyside doux.' },
+        mandarine: { classe: 'Terpènes', composés: 'Limonène, γ-terpinène', origine: 'Distillation propre avec forte proportion de composés de tête ; fermentation à faible soufre.', fut: 'Bourbon 1er remplissage pour le côté juteux ; refill pour plus de finesse.', tips: 'Plus douce et sucrée que l’orange.', styles: 'Speyside jeune, Irish pot still léger.' },
+        pamplemousse: { classe: 'Terpènes / Cétone sesquiterpénique', composés: 'Nootkatone, limonène', origine: 'Composés de tête + oxydation contrôlée créent l’amertume typique.', fut: 'Refill (peu d’extraction) pour garder l’amertume fraîche.', tips: 'Peut tirer vers “zeste amer” en finale.', styles: 'Côtiers, Highlands secs.' },
+
+        mangue: { classe: 'Esters d’acides gras', composés: 'Butyrate d’éthyle, caproate d’éthyle', origine: 'Fermentation riche et longue (levures très estérifiantes) + reflux à la distillation.', fut: 'Bourbon 1er remplissage, ex-rum finish → mangue juteuse.', tips: 'Souvent accompagnée de pêche/abricot.', styles: 'Highlands fruités, quelques Irish.' },
+        papaye: { classe: 'Esters légers', composés: 'Butyrate d’éthyle, hexanoate d’éthyle', origine: 'Fermentation chaude et nutritive ; coupes propres pour garder la note exotique.', fut: 'Bourbon doux ; fûts très oxydatifs l’effacent.', tips: 'Arôme surtout au nez, très volatil.', styles: 'Malts jeunes et non tourbés.' },
+        'fruit de la passion': { classe: 'Esters / traces de thiols', composés: 'Acétate/Butyrate d’éthyle, traces de 3-MH/3-MHA', origine: 'Fermentation expressive ; distillation avec bon reflux.', fut: 'Bourbon neutre ou ex-vin blanc doux pour le côté tropical.', tips: 'Souvent perçu comme “tropical acidulé”.', styles: 'Highlands doux, certaines finitions vin.' },
+        melon: { classe: 'Esters / Alcools « verts »', composés: 'Hexanol, acétate d’hexyle', origine: 'Fermentation propre ; coupes hautes pour les arômes “verts”.', fut: 'Refill bourbon pour conserver la délicatesse.', tips: 'Peut rappeler melon miel/cantaloup.', styles: 'Speyside léger.' },
+
+        'pomme verte': { classe: 'Esters (acétate/caproate)', composés: 'Acétate d’éthyle, hexanoate d’éthyle', origine: 'Levures produisant acides gras + coupes hautes (têtes larges).', fut: 'Refill bourbon pour garder la verdeur croquante.', tips: 'Tendance à s’atténuer avec l’oxydation en verre.', styles: 'Lowlands, Speyside.' },
+        coing: { classe: 'Esters / Aldéhydes oxydatifs', composés: 'Hexanoate d’éthyle, sotolon (trace)', origine: 'Évolution fruitée → confite avec l’âge (oxydation lente).', fut: 'Sherry/Oloroso pour pâte de coing ; bourbon refill pour coing frais.', tips: 'Souvent avec miel/épices douces.', styles: 'Sherry matured âgés, Irish.' },
+
+        pêche: { classe: 'Esters d’acides gras', composés: 'Octanoate d’éthyle, butyrate d’éthyle, δ-décalactone', origine: 'Fermentation riche ; reflux modéré pour douceur juteuse.', fut: 'Bourbon 1er remplissage → pêche mûre ; sherry → pêche confite.', tips: 'Très fréquent dans malts fruités non tourbés.', styles: 'Highlands, Speyside.' },
+        abricot: { classe: 'Esters / Lactones', composés: 'Octanoate d’éthyle, δ-décalactone', origine: 'Fermentation expressive + distillation propre.', fut: 'Bourbon (frais) ; Oloroso (abricot sec/confit).', tips: 'Volatil, surtout au nez.', styles: 'Speyside fruité.' },
+        prune: { classe: 'Oxydation / Esters lourds', composés: 'Sotolon, éthyl lactate', origine: 'Vieillissement prolongé et/ou sherry riche.', fut: 'Oloroso/PX → pruneau/prune confite.', tips: 'Souvent avec cacao/noix.', styles: 'Sherry matured âgés.' },
+        mirabelle: { classe: 'Esters / Lactones', composés: 'Octanoate d’éthyle, δ-décalactone', origine: 'Fermentation fruitée ; coupes nettes.', fut: 'Bourbon neutre pour la délicatesse.', tips: 'Entre abricot et pomme jaune.', styles: 'Malts doux, parfois continentaux.' },
+
+        fraise: { classe: 'Esters / Furaneones', composés: 'Butyrate d’éthyle, furaneol', origine: 'Fermentations très estérifiantes ; distillation propre.', fut: 'Finitions vin rouge/porto → fraise confite.', tips: 'Note de tête sucrée.', styles: 'Finishes “wine cask”, Speyside jeunes.' },
+        framboise: { classe: 'Cétones aromatiques / Esters', composés: 'Frambinone (raspberry ketone), acétate d’hexyle', origine: 'Fermentation nette ; peu d’influence de queue.', fut: 'Refill ou vin rouge léger.', tips: 'Souvent avec pétales de rose.', styles: 'Malts légers, finitions vin.' },
+        cassis: { classe: 'Esters / Thiols traces', composés: 'β-damascénone, 4MMP (traces)', origine: 'Fermentation expressive ; élevage modéré.', fut: 'Vin rouge/sherry pour cassis confit.', tips: 'Parfois “ribena” au nez.', styles: 'Finishes vin rouge, sherry fruité.' },
+        'mûre': { classe: 'Esters / Norisoprénoïdes', composés: 'Ethyl butyrate, β-damascénone', origine: 'Fermentation riche ; coupes nettes.', fut: 'Vin rouge/porto.', tips: 'Donne un fondu de fruits noirs.', styles: 'Highlands/Speyside en finish.' },
+        myrtille: { classe: 'Esters / Norisoprénoïdes', composés: 'Ethyl caproate, β-ionone (trace)', origine: 'Fermentation expressive ; distillation “propre”.', fut: 'Refill pour garder le côté bleuet.', tips: 'Nuance plus sombre que mûre.', styles: 'Malts légers.' },
+
+        'raisin sec': { classe: 'Aldéhydes oxydatifs / Lactones', composés: 'Sotolon, furfural', origine: 'Maturation oxydative prolongée (sherry, vins doux).', fut: 'Oloroso/PX → raisins secs prononcés.', tips: 'Souvent avec noix/caramel.', styles: 'Sherry matured.' },
+        pruneau: { classe: 'Aldéhydes / Esters lourds', composés: 'Sotolon, éthyl lactate', origine: 'Vieillissement long en fûts oxydatifs.', fut: 'PX/Oloroso.', tips: 'Texture sirupeuse en bouche.', styles: 'Malts très âgés, sherry.' },
+        'figue sèche': { classe: 'Oxydation / Maillard', composés: 'Furfural, HMF, sotolon', origine: 'Interaction bois-alcool + oxygène (longue maturation).', fut: 'Sherry (oloroso/PX).', tips: 'Va souvent avec dattes/miel.', styles: 'Sherry matured.' },
+        'abricot sec': { classe: 'Esters / Oxydation', composés: 'Octanoate d’éthyle, sotolon', origine: 'Évolution des esters en élevage oxydatif.', fut: 'Oloroso, parfois Sauternes.', tips: 'Souvent avec amande.', styles: 'Finitions vins doux.' },
+        dattes: { classe: 'Oxydation / Caramélisation', composés: 'Sotolon, HMF', origine: 'Vieillissement prolongé en fûts très actifs.', fut: 'PX / vins doux naturels.', tips: 'Gourmandise “pâte de dattes”.', styles: 'Sherry très marqué.' },
+
+        "fleur d'oranger": { classe: 'Terpènes', composés: 'Linalol, nérol, géraniol', origine: 'Fermentation “propre” ; coupes hautes.', fut: 'Refill bourbon ; sherry peut masquer.', tips: 'Florale + zeste d’agrume.', styles: 'Speyside, Irish légers.' },
+        rose: { classe: 'Alcool/ester aromatique', composés: 'Alcool phényléthylique, acétate de phényléthyle', origine: 'Métabolites de levures ; distillation douce.', fut: 'Bourbon neutre ; éviter les toasts lourds.', tips: 'Avec miel/litchi parfois.', styles: 'Speyside délicat.' },
+        bruyère: { classe: 'Notes florales/miellées', composés: 'Sotolon (trace), phénols légers', origine: 'Vieillissement tempéré ; chais humides.', fut: 'Sherry doux ou bourbon ancien.', tips: 'Souvent associée aux malts côtiers d’Orkney.', styles: 'Highlands/Orkney.' },
+        géranium: { classe: 'Terpènes', composés: 'Géraniol, citronellol', origine: 'Fermentation nette ; coupes hautes.', fut: 'Refill pour conserver la délicatesse.', tips: 'Peut virer savonneux si trop extrait.', styles: 'Malts très légers.' },
+        violette: { classe: 'Norisoprénoïdes', composés: 'Ionones (α/β-ionone)', origine: 'Traces issues de la fermentation et du vieillissement.', fut: 'Bourbon neutre ; éviter rechar fort.', tips: 'Nuance poudrée très subtile.', styles: 'Speyside élégant.' },
+
+        'herbe coupée': { classe: 'Alcools « verts »', composés: 'cis-3-hexénol, cis-3-hexényl acétate', origine: 'Fermentation courte ; coupes très hautes (têtes).', fut: 'Refill/bois peu actif.', tips: 'Donne fraîcheur végétale au nez.', styles: 'Lowlands, malts jeunes.' },
+        eucalyptus: { classe: 'Terpènes / Oxydation', composés: '1,8-cinéole (eucalyptol)', origine: 'Distillation à fort reflux ; coupe serrée.', fut: 'Bourbon toasté moyen.', tips: 'Fraîcheur camphrée.', styles: 'Bourbon cask, quelques tourbés.' },
+        genévrier: { classe: 'Terpènes résineux', composés: 'α-pinène, sabinène', origine: 'Congénères résineux captés en têtes.', fut: 'Refill ; bois neuf atténue.', tips: 'Rappelle le gin (légèrement).', styles: 'Malts secs, parfois rye.' },
+        'feuille de tabac': { classe: 'Phénols / Pyrazines', composés: 'Pyridines, pyrazines, phénols méthoxylés', origine: 'Queue légère + maturation oxydative.', fut: 'Sherry/Oloroso, vieux fûts.', tips: 'Souvent avec cuir/boîte à cigare.', styles: 'Sherry âgés.' },
+        foin: { classe: 'Lactones / Coumarine', composés: 'Coumarine, vanilline (trace)', origine: 'Oxydation douce durant l’élevage.', fut: 'Refill/bourbon ancien.', tips: 'Herbacé sec, miel léger.', styles: 'Highlands, Speyside.' },
+        thym: { classe: 'Terpènes', composés: 'Thymol, carvacrol', origine: 'Coupe propre + reflux ; peu de queue.', fut: 'Refill ; bois neuf peut masquer.', tips: 'Parfois avec pin/romarin.', styles: 'Malts herbacés.' },
+        pin: { classe: 'Terpènes résineux', composés: 'α/β-pinène', origine: 'Composés de tête ; distillation propre.', fut: 'Refill ; chêne européen peut ajouter “cèdre”.', tips: 'Sensation résineuse fraîche.', styles: 'Côtiers/herbacés.' },
+
+        toast: { classe: 'Produits de Maillard', composés: 'Maltol, cyclotène', origine: 'Séchage du malt + toast des douelles.', fut: 'Toasts moyens à forts (bourbon, rechar).', tips: 'Entre biscuit et pain grillé.', styles: 'Highlands, bourbons.' },
+        café: { classe: 'Furannes / Pyrazines', composés: '5-méthylfurfural, pyrazines torréfiées', origine: 'Bois fortement bousiné (char), Maillard.', fut: 'Rechar/STR, chêne neuf.', tips: 'Souvent avec cacao/chocolat.', styles: 'Sherry/STR.' },
+        cacao: { classe: 'Furannes / Pyrazines', composés: 'Furfural, 2-furfurylthiol (trace)', origine: 'Toast/char élevé ; Maillard du bois.', fut: 'Rechar, chêne neuf.', tips: 'Amertume élégante en finale.', styles: 'Bourbon & sherry.' },
+
+        'pain frais': { classe: 'Esters / Aldéhydes légers', composés: 'Acétate d’éthyle, acétaldéhyde', origine: 'Fermentation active ; levures “boulangères”.', fut: 'Refill pour conserver la brioche/pain.', tips: 'Très marqué sur new make.', styles: 'Irish pot still, Speyside jeune.' },
+        'pâte levée': { classe: 'Esters / Diacétyle (trace)', composés: 'Acétate d’hexyle, diacétyle', origine: 'Fermentation riche ; repos de moût.', fut: 'Refill ; sherry masque.', tips: 'Impression de boulange.', styles: 'Malts très jeunes.' },
+        brioche: { classe: 'Esters lactiques', composés: 'Éthyl lactate, acétate d’hexyle', origine: 'Fermentation + élevage doux (peu d’oxydation).', fut: 'Bourbon refill → brioché sucré.', tips: 'Souvent avec vanille.', styles: 'Speyside, Irish.' },
+        'yaourt/fromage frais': { classe: 'Acides/esters lactiques', composés: 'Acide lactique, éthyl lactate', origine: 'Bactéries lactiques/levures ; ferments laitiers dans le moût.', fut: 'Refill ; bois neuf atténue.', tips: 'Acidité crémeuse agréable.', styles: 'Malts fermiers, quelques craft.' },
+
+        'huile minérale': { classe: 'Alcools/esters lourds (queue)', composés: 'Acides gras C8–C12, alcools supérieurs', origine: 'Coupes basses (queue) ou distillation très huileuse.', fut: 'Refill long réduit la sensation ; rechar peut la “nettoyer”.', tips: 'Peut rappeler “paraffine/minéral”.', styles: 'Alambics à worm tub, styles “waxy”.' },
+        'cire de bougie / paraffine': { classe: 'Esters/alcools à longue chaîne', composés: 'Esters cireux C18+, alcools gras', origine: 'Distillats “waxy” + maturation modérée.', fut: 'Bourbon refill ; trop d’extraction la masque.', tips: 'Signature de certaines distilleries (ex. style Clynelish).', styles: 'Highlands cireux.' },
+        'beurre rance': { classe: 'Acides gras volatils', composés: 'Acide butyrique, isobutyrique', origine: 'Queue/contamination lactique ; vieillissement trop chaud.', fut: 'Refill long ou recoupe stricte pour l’éviter.', tips: 'Défaut au-delà d’un seuil.', styles: 'Occasionnel, new make imparfait.' },
+        savon: { classe: 'Saponification', composés: 'Sels d’acides gras, acides gras libres', origine: 'Réaction acides gras/ions (eau dure) ; excès de queue.', fut: 'Filtration/purge ; éviter fûts contaminés.', tips: 'Défaut net au palais.', styles: '—' },
+        métallique: { classe: 'Ions métalliques / Aldéhydes', composés: 'Fer/Cuivre (traces), aldéhydes réactifs', origine: 'Contact métal/coupe basse ; eau de réduction riche en Fe.', fut: 'Aucun fût ne “corrige” totalement ; aération peut aider.', tips: 'Sensation sang/monnaie.', styles: '—' },
+        cuir: { classe: 'Tannins / Phénols oxydés', composés: 'Tannins hydrolysables, aldéhydes phénoliques', origine: 'Extraction de chêne européen + oxydation longue.', fut: 'Sherry/Oloroso, vieux fûts.', tips: 'Souvent avec tabac/boîte à cigare.', styles: 'Sherry âgés.' },
+        'sac de jute': { classe: 'Phénols / Aldéhydes', composés: 'Géosmine (trace), aldéhydes “poussiéreux”', origine: 'Vieux fûts (sherry) ou stockage humide.', fut: 'Fûts très anciens ; refill propre pour l’éviter.', tips: 'Note “hessian” typique de certains lots.', styles: 'Sherry traditionnels.' },
+
+        'terre humide': { classe: 'Composés terreux', composés: 'Géosmine, 2-méthylisobornéol (trace)', origine: 'Tourbe + chais humides ; coupe un peu basse.', fut: 'Refill pour garder la pureté de la tourbe.', tips: 'Souvent avec mousse d’arbre.', styles: 'Islay, Highlands tourbés.' },
+        "mousse d’arbre": { classe: 'Terpènes/Phénols', composés: 'Ionones (trace), phénols légers', origine: 'Tourbe + maturation humide.', fut: 'Refill ; sherry l’adoucit.', tips: 'Rappelle sous-bois humide.', styles: 'Côtiers tourbés.' },
+        'vieux bandage': { classe: 'Phénols', composés: 'p-crésol, gaïacol', origine: 'Tourbe côtière + coupe basse.', fut: 'Refill maintient l’aspect médicinal.', tips: 'Marqueurs typiques de certains Islay.', styles: 'Sud Islay.' },
+        bacon: { classe: 'Phénols & phénols alkylés', composés: '4-éthylgaïacol, 4-éthylphénol', origine: 'Combustion de tourbe/char ; distillation huileuse.', fut: 'Rechar → fumé-sucré “bacon”.', tips: 'Souvent perçu au nez + rétro.', styles: 'Islay, peated Highlands.' },
+        goudron: { classe: 'Phénols lourds', composés: 'Crésols, naphtols (trace)', origine: 'Tourbe riche en résines + coupe basse.', fut: 'Refill ; sherry arrondit.', tips: 'Fumé sombre et collant.', styles: 'Islay puissants.' },
+        caoutchouc: { classe: 'Soufrés / Phénols', composés: 'Thiols, phénols méthylés', origine: 'Réduction/soufre en fûts de sherry mal préparés ou coupes basses.', fut: 'Conditionnement soigné ; aération atténue.', tips: 'Peut être défaut si dominant.', styles: 'Certains sherry casks.' },
+        'kérosène': { classe: 'Hydrocarbures aromatiques (trace) / Réduction', composés: 'Composés aromatiques réduits, phénols lourds', origine: 'Tourbe intense + réduction ; coupes basses.', fut: 'Refill pour limiter, rechar sucrant.', tips: 'Note extrême, rare.', styles: 'Islay très tourbés.' },
+        silex: { classe: 'Soufrés réduits', composés: 'H₂S/thiols (traces) → impression “pierre à fusil”', origine: 'Réduction en fût/fermentation ; distillation très propre.', fut: 'Refill/bois peu actif pour le garder subtil.', tips: 'Souvent avec citron/zeste.', styles: 'Maritime, Highlands.' },
+        'poisson / fruits de mer': { classe: 'Soufrés / Phénols marins', composés: 'DMS (diméthylsulfure), phénols iodés (perçus)', origine: 'Tourbe côtière + maturation en chai marin.', fut: 'Refill → profil marin net.', tips: '“Coquillage/huître” au nez.', styles: 'Islay, îles.' },
+        iode: { classe: 'Perception phénolique marine', composés: 'p-crésol et phénols associés (perçus iodés)', origine: 'Tourbe côtière ; environnement salin.', fut: 'Refill ; sherry adoucit.', tips: 'Signature de malts marins.', styles: 'Islay, îles.' },
+        algue: { classe: 'Phénols / Terpènes marins', composés: 'Phénols iodés, sesquiterpènes d’algues (trace)', origine: 'Tourbe côtière + chais au bord de mer.', fut: 'Refill pour salinité/algue nette.', tips: 'Parfois “nori/kelp”.', styles: 'Islay, Campbeltown.' },
+        soufre: { classe: 'Composés soufrés réduits', composés: 'H₂S, mercaptans (trace)', origine: 'Réduction/assainissement au soufre de fûts ; fermentation réductrice.', fut: 'Aération/re-racking ; sherry mal rincé l’accentue.', tips: 'Peut virer allumette/caoutchouc.', styles: 'Cas ponctuels.' },
+
+        chêne: { classe: 'Lactones / Tannins / Aldéhydes', composés: 'β-methyl-γ-octalactone, vanilline, ellagitannins', origine: 'Extraction du bois (espèce, toast, chauffe).', fut: 'Quercus alba → coco/vanille ; Quercus robur → tanins/épices.', tips: 'Structure, astringence et douceur.', styles: 'Tous selon fût.' },
+        cèdre: { classe: 'Sesquiterpènes boisés', composés: 'Cédrol, thujopsène', origine: 'Chêne européen très toasté/âgé.', fut: 'Sherry européen ; long élevage.', tips: 'Boîte à cigare, épices sèches.', styles: 'Sherry âgés.' },
+        'bois de santal': { classe: 'Sesquiterpènes', composés: 'Santalol (α/β)', origine: 'Évolution des lactones + composés boisés.', fut: 'Chêne européen, long élevage.', tips: 'Crémeux, enveloppant.', styles: 'Malts très âgés.' },
+        miel: { classe: 'Esters aromatiques / Norisoprénoïdes', composés: 'Acétate de phényléthyle, β-damascénone', origine: 'Oxydation douce + esters floraux.', fut: 'Sherry doux, bourbon 1er remplissage.', tips: 'Souvent avec cire/bruyère.', styles: 'Speyside, Orkney.' },
+        girofle: { classe: 'Phénols épicés', composés: 'Eugénol', origine: 'Extraction du chêne (toast modéré/fort).', fut: 'Chêne européen/sherry.', tips: 'Picotement épicé en finale.', styles: 'Sherry casks.' },
+        gingembre: { classe: 'Cétones épicées', composés: 'Zingérone', origine: 'Toast/char ; oxydation des sucres du bois.', fut: 'Rechar/STR.', tips: 'Chaleur épicée, bouche sèche.', styles: 'Bourbon & sherry.' },
+        poivre: { classe: 'Phénols/terpènes épicés', composés: 'Eugénol, sabinène (perception poivrée)', origine: 'Extraction du chêne + alcool fort.', fut: 'Chêne neuf/fortement toasté.', tips: 'Plus tactile qu’aromatique.', styles: 'Rye/bourbon, certains malts boisés.' },
+        'noix de muscade': { classe: 'Phénylpropanoïdes', composés: 'Myristicine, safrole (trace)', origine: 'Chêne européen bien toasté.', fut: 'Sherry européen.', tips: 'Épice douce et chaude.', styles: 'Sherry casks.' },
+        cardamome: { classe: 'Terpènes épicés', composés: '1,8-cinéole, terpinyl acétate', origine: 'Interaction esters/terpènes du bois.', fut: 'Fûts actifs (neuf/rechar).', tips: 'Fraîcheur épicée mentholée.', styles: 'Bourbon actifs.' },
+
+        'sherry / xérès': { classe: 'Oxydation / Esters', composés: 'Sotolon, acétaldéhyde, éthyl lactate', origine: 'Transfert du vin + oxydation en fût.', fut: 'Oloroso/PX/Amontillado.', tips: 'Fruits secs, noix, épices.', styles: 'Sherry matured/finish.' },
+        madère: { classe: 'Oxydation / Caramélisation', composés: 'HMF, sotolon', origine: 'Fûts ex-Madère (chauffage/madérisation).', fut: 'Casks ex-Madeira.', tips: 'Zeste d’orange, caramel, rancio.', styles: 'Finishes Madère.' },
+        porto: { classe: 'Esters fruités / Tanins', composés: 'Esters de fruits rouges, acétate d’éthyle', origine: 'Fûts ex-Porto (Ruby/Tawny).', fut: 'Port pipes.', tips: 'Fruits rouges, chocolat au lait.', styles: 'Finishes port cask.' },
+        'vin rouge': { classe: 'Tanins / Esters', composés: 'Tanins condensés, β-damascénone', origine: 'Transfert de vin + extraction du chêne.', fut: 'Barriques de Bordeaux/Bourgogne.', tips: 'Baies rouges, structure tannique.', styles: 'Wine cask finishes.' },
+        sauternes: { classe: 'Oxydation douce / Botrytisation', composés: 'Sotolon, acétate de phényléthyle, miel', origine: 'Fûts ex-Sauternes (vins botrytisés).', fut: 'Casks de Sauternes.', tips: 'Miel/abricot confit.', styles: 'Finishes Sauternes.' },
+
+        noisette: { classe: 'Aldéhydes oxydatifs', composés: 'Sotolon (faible), furfural', origine: 'Vieillissement oxydatif (sherry).', fut: 'Oloroso/PX.', tips: 'Souvent avec toffee/noix.', styles: 'Sherry matured.' },
+        amande: { classe: 'Aromas benzylés', composés: 'Benzaldéhyde', origine: 'Oxydation/interaction bois ; parfois influence de noyaux des vins fortifiés.', fut: 'Sherry/PX, vins doux.', tips: 'Peut rappeler massepain.', styles: 'Sherry casks.' },
+        pralin: { classe: 'Maillard + Fruits à coque', composés: 'Furfural, HMF, lactones', origine: 'Caramélisation du bois + notes noix/noisette.', fut: 'Rechar/bois actif.', tips: 'Gourmand, sucré-noisette.', styles: 'Bourbon & sherry.' },
+        nougat: { classe: 'Sucre cuit / Lactones', composés: 'HMF, vanilline, lactones', origine: 'Toast du bois + esters lactiques.', fut: 'Bourbon 1er remplissage.', tips: 'Crémeux, vanillé-mielleux.', styles: 'Bourbon cask.' }
+      };
+
+      // Liste aplatie pour la recherche
+      const FLAT = [];
+      Object.entries(ATLAS).forEach(([fam, groups]) => {
+        Object.entries(groups).forEach(([grp, items]) => {
+          if (grp === '_fam') return;
+          items.forEach((label) => {
+            FLAT.push({ fam, group: grp, label, path: fam + ' › ' + grp });
+          });
+        });
+      });
+
+      const labelToFam = {};
+      Object.entries(ATLAS).forEach(([familyName, groups]) => {
+        const famCode = groups._fam || familyName.toLowerCase();
+        Object.entries(groups).forEach(([grp, items]) => {
+          if (grp === '_fam') return;
+          items.forEach((lbl) => {
+            labelToFam[lbl] = famCode;
+          });
+        });
+      });
+
+      // ---------------------- ÉTAT GLOBAL ----------------------
+      const state = {
+        picks: [],
+        metrics: {},
+        scores: {}
+      };
+      METRICS.forEach((m) => (state.metrics[m.key] = 5));
+      SCORE_CATEGORIES.forEach((c) => (state.scores[c.id] = 0));
+
+      let radarChart = null;
+
+      const exportUI = {
+        overlay: null,
+        fill: null,
+        label: null,
+        value: null,
+        timer: null,
+        current: 0
+      };
+
+      function normalize(str) {
+        return (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      }
+
+      // Helper couleurs
+      function getThemeTokens(forcedTheme) {
+        // Si forcedTheme est défini ('light' ou 'dark'), on renvoie les codes couleurs
+        // hardcodés pour éviter d'utiliser getComputedStyle dépendant du DOM.
+        if (forcedTheme === 'light') {
+          return {
+            text: '#020617',
+            muted: '#6b7280',
+            border: 'rgba(148, 163, 184, 0.26)',
+            accent: '#2563eb',
+            grid: 'rgba(148, 163, 184, 0.35)'
+          };
+        } else if (forcedTheme === 'dark') {
+          return {
+            text: '#e5e7eb',
+            muted: '#9ca3af',
+            border: 'rgba(148, 163, 184, 0.4)',
+            accent: '#38bdf8',
+            grid: 'rgba(148, 163, 184, 0.35)'
+          };
+        }
+
+        // Sinon on lit le DOM (live)
+        const root = document.documentElement;
+        const style = getComputedStyle(root);
+        const get = (name, fallback) => {
+          const v = style.getPropertyValue(name).trim();
+          return v || fallback;
+        };
+        return {
+          text: get('--color-text', '#111827'),
+          muted: get('--color-muted', '#6b7280'),
+          border: get('--color-border-subtle', 'rgba(148, 163, 184, 0.4)'),
+          accent: get('--color-accent', '#2563eb'),
+          grid: 'rgba(148, 163, 184, 0.35)'
+        };
+      }
+
+      // ---------------------- THÈME (clair/sombre) ----------------------
+      function initTheme() {
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const saved = (typeof localStorage !== 'undefined') ? localStorage.getItem(THEME_KEY) : null;
+        const initial = saved === 'light' || saved === 'dark' ? saved : (prefersDark ? 'dark' : 'light');
+        applyTheme(initial);
+
+        const toggle = document.getElementById('themeToggle');
+        if (toggle) {
+          toggle.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme') || initial;
+            const next = current === 'dark' ? 'light' : 'dark';
+            applyTheme(next);
+            try {
+              localStorage.setItem(THEME_KEY, next);
+            } catch (e) {}
+          });
+        }
+
+        if (window.matchMedia) {
+          window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            const savedAgain = (typeof localStorage !== 'undefined') ? localStorage.getItem(THEME_KEY) : null;
+            if (!savedAgain) {
+              const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+              applyTheme(isDark ? 'dark' : 'light');
+            } else {
+              updateThemeToggleIcon(savedAgain);
+              updateChartTheme();
+            }
+          });
+        }
+      }
+
+      function applyTheme(mode) {
+        document.documentElement.setAttribute('data-theme', mode);
+        updateThemeToggleIcon(mode);
+        updateChartTheme();
+      }
+
+      function updateThemeToggleIcon(mode) {
+        const btn = document.getElementById('themeToggle');
+        if (!btn) return;
+        const iconSpan = btn.querySelector('.theme-icon');
+        if (!iconSpan) return;
+        const isDark = mode === 'dark';
+        iconSpan.textContent = isDark ? '🌙' : '☀️';
+        btn.setAttribute('aria-pressed', isDark ? 'true' : 'false');
+      }
+
+      // ---------------------- OVERLAY EXPORT PDF ----------------------
+      function initExportOverlay() {
+        exportUI.overlay = document.getElementById('exportOverlay');
+        exportUI.fill = document.getElementById('exportProgressFill');
+        exportUI.label = document.getElementById('exportProgressLabel');
+        exportUI.value = document.getElementById('exportProgressValue');
+      }
+
+      function startExportProgress() {
+        if (!exportUI.overlay) return;
+        exportUI.overlay.setAttribute('aria-hidden', 'false');
+        exportUI.overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        exportUI.current = 0;
+        if (exportUI.fill) exportUI.fill.style.width = '0%';
+        if (exportUI.label) exportUI.label.textContent = 'Préparation de la fiche…';
+        if (exportUI.value) exportUI.value.textContent = '0%';
+
+        if (exportUI.timer) {
+          clearInterval(exportUI.timer);
+          exportUI.timer = null;
+        }
+
+        exportUI.timer = setInterval(() => {
+          if (exportUI.current >= 88) return;
+          exportUI.current += 2;
+          if (exportUI.current > 88) exportUI.current = 88;
+
+          if (exportUI.fill) exportUI.fill.style.width = exportUI.current + '%';
+          if (exportUI.value) exportUI.value.textContent = exportUI.current + '%';
+
+          if (!exportUI.label) return;
+          if (exportUI.current < 25) {
+            exportUI.label.textContent = 'Préparation de la fiche…';
+          } else if (exportUI.current < 55) {
+            exportUI.label.textContent = 'Capture du profil sensoriel…';
+          } else if (exportUI.current < 80) {
+            exportUI.label.textContent = 'Génération du document…';
+          } else {
+            exportUI.label.textContent = 'Finalisation…';
+          }
+        }, 260);
+      }
+
+      function completeExportProgress(success) {
+        if (!exportUI.overlay) return;
+        if (exportUI.timer) {
+          clearInterval(exportUI.timer);
+          exportUI.timer = null;
+        }
+        exportUI.current = 100;
+        if (exportUI.fill) exportUI.fill.style.width = '100%';
+        if (exportUI.value) exportUI.value.textContent = '100%';
+        if (exportUI.label) {
+          exportUI.label.textContent = success
+            ? 'PDF prêt à être téléchargé.'
+            : 'Une erreur est survenue lors de la génération.';
+        }
+        setTimeout(() => {
+          exportUI.overlay.setAttribute('aria-hidden', 'true');
+          exportUI.overlay.classList.remove('open');
+          document.body.style.overflow = '';
+        }, 650);
+      }
+
+      // ---------------------- UI DYNAMIQUE ----------------------
+      function buildMetrics() {
+        const container = document.getElementById('metricControls');
+        if (!container) return;
+        container.innerHTML = '';
+        METRICS.forEach((m) => {
+          const row = document.createElement('div');
+          row.className = 'metric-row';
+
+          const label = document.createElement('label');
+          label.textContent = m.label;
+          label.setAttribute('for', 'm-' + m.key);
+
+          const wrap = document.createElement('div');
+          wrap.className = 'range-wrap';
+
+          const input = document.createElement('input');
+          input.type = 'range';
+          input.min = '0';
+          input.max = '10';
+          input.step = '1';
+          input.value = String(state.metrics[m.key]);
+          input.id = 'm-' + m.key;
+
+          const output = document.createElement('output');
+          output.textContent = String(state.metrics[m.key]);
+
+          wrap.appendChild(input);
+          wrap.appendChild(output);
+          row.appendChild(label);
+          row.appendChild(wrap);
+          container.appendChild(row);
+
+          input.addEventListener('input', () => {
+            const val = parseInt(input.value, 10) || 0;
+            state.metrics[m.key] = val;
+            output.textContent = String(val);
+            updateChart();
+            updatePreview();
+          });
+        });
+      }
+
+      // Nouvelle version ergonomique pour les notes (Sliders + Boutons)
+      function buildScores() {
+        const container = document.getElementById('scoreControls');
+        if (!container) return;
+        container.innerHTML = '';
+
+        SCORE_CATEGORIES.forEach((c) => {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'score-control';
+
+          // En-tête : Label + Valeur
+          const header = document.createElement('div');
+          header.className = 'score-header';
+          
+          const label = document.createElement('label');
+          label.className = 'score-label';
+          label.setAttribute('for', 's-' + c.id);
+          label.textContent = c.label;
+
+          const valDisplay = document.createElement('div');
+          valDisplay.className = 'score-val-display';
+          // Création du texte de valeur (ex: "8 / 10")
+          const valNum = document.createElement('span'); 
+          valNum.textContent = '0';
+          valNum.style.fontWeight = '700';
+          valNum.style.color = 'var(--color-accent)';
+          valNum.style.fontSize = '15px';
+          
+          const valMax = document.createElement('span');
+          valMax.textContent = ' / ' + c.max;
+
+          valDisplay.appendChild(valNum);
+          valDisplay.appendChild(valMax);
+
+          header.appendChild(label);
+          header.appendChild(valDisplay);
+
+          // Contrôles : [-] [Slider] [+]
+          const controls = document.createElement('div');
+          controls.className = 'score-input-wrapper';
+
+          const btnDec = document.createElement('button');
+          btnDec.type = 'button';
+          btnDec.className = 'score-btn';
+          btnDec.textContent = '–'; // en dash
+          btnDec.ariaLabel = "Diminuer la note pour " + c.label;
+
+          const slider = document.createElement('input');
+          slider.type = 'range';
+          slider.className = 'score-slider';
+          slider.min = '0';
+          slider.max = String(c.max);
+          slider.step = '0.5'; // Précision à 0.5 possible
+          slider.value = '0';
+          slider.id = 's-' + c.id;
+
+          const btnInc = document.createElement('button');
+          btnInc.type = 'button';
+          btnInc.className = 'score-btn';
+          btnInc.textContent = '+';
+          btnInc.ariaLabel = "Augmenter la note pour " + c.label;
+
+          controls.appendChild(btnDec);
+          controls.appendChild(slider);
+          controls.appendChild(btnInc);
+
+          wrapper.appendChild(header);
+          wrapper.appendChild(controls);
+          container.appendChild(wrapper);
+
+          // Fonction de mise à jour centralisée pour ce champ
+          const updateField = (val) => {
+            let num = parseFloat(val);
+            if (isNaN(num)) num = 0;
+            if (num < 0) num = 0;
+            if (num > c.max) num = c.max;
+
+            // Mise à jour Slider
+            slider.value = String(num);
+            
+            // Mise à jour affichage texte
+            valNum.textContent = num;
+
+            // Mise à jour état global
+            state.scores[c.id] = num;
+
+            // Mise à jour visuelle de la "track" du slider (gradient)
+            const pct = (num / c.max) * 100;
+            // CSS var dynamic override ou direct style
+            slider.style.background = `linear-gradient(to right, var(--color-accent) 0%, var(--color-accent) ${pct}%, rgba(148, 163, 184, 0.2) ${pct}%, rgba(148, 163, 184, 0.2) 100%)`;
+
+            // Désactivation des boutons aux limites
+            btnDec.disabled = (num <= 0);
+            btnInc.disabled = (num >= c.max);
+
+            updateTotal();
+            updatePreview();
+          };
+
+          // Listeners
+          slider.addEventListener('input', (e) => updateField(e.target.value));
+          
+          btnDec.addEventListener('click', () => {
+            let current = parseFloat(slider.value);
+            // Pas de 1 ou 0.5 selon préférence (ici 1 pour boutons, slider permet 0.5 si on veut)
+            // On reste simple : boutons +/- 1
+            updateField(current - 1); 
+          });
+
+          btnInc.addEventListener('click', () => {
+            let current = parseFloat(slider.value);
+            updateField(current + 1);
+          });
+
+          // Initialisation visuelle
+          updateField(0);
+        });
+      }
+
+      // ---------------------- CHART RADAR ----------------------
+      function initRadarChart() {
+        const canvas = document.getElementById('radarChart');
+        if (!canvas || !window.Chart) return;
+        const ctx = canvas.getContext('2d');
+        const theme = getThemeTokens();
+
+        radarChart = new Chart(ctx, {
+          type: 'radar',
+          data: {
+            labels: METRICS.map((m) => m.label),
+            datasets: [{
+              label: 'Profil sensoriel',
+              data: METRICS.map((m) => state.metrics[m.key]),
+              backgroundColor: 'rgba(37, 99, 235, 0.18)',
+              borderColor: theme.accent,
+              borderWidth: 2,
+              pointBackgroundColor: theme.accent,
+              pointRadius: 3,
+              pointHoverRadius: 4
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false, // Désactivé pour faciliter l'export PDF (snapshot immédiat)
+            scales: {
+              r: {
+                beginAtZero: true,
+                min: 0,
+                max: 10,
+                ticks: {
+                  stepSize: 2,
+                  color: theme.muted,
+                  backdropColor: 'transparent',
+                  showLabelBackdrop: false,
+                  font: { size: 10 }
+                },
+                grid: {
+                  color: 'rgba(148, 163, 184, 0.35)'
+                },
+                angleLines: {
+                  color: 'rgba(148, 163, 184, 0.35)'
+                },
+                pointLabels: {
+                  color: theme.text,
+                  font: { size: 12 }
+                }
+              }
+            },
+            plugins: {
+              legend: { display: false }
+            }
+          }
+        });
+      }
+
+      // Met à jour le thème du graphique. 
+      // Peut accepter un paramètre 'forcedTheme' ("light" ou "dark") pour l'export PDF.
+      function updateChartTheme(forcedTheme) {
+        if (!radarChart) return;
+        
+        const theme = getThemeTokens(forcedTheme);
+        const scale = radarChart.options.scales.r;
+        
+        scale.ticks.color = theme.muted;
+        scale.pointLabels.color = theme.text;
+        scale.grid.color = theme.grid;
+        scale.angleLines.color = theme.grid;
+        
+        radarChart.data.datasets[0].borderColor = theme.accent;
+        radarChart.data.datasets[0].pointBackgroundColor = theme.accent;
+        // Mise à jour du background légèrement transparent mais teinté
+        radarChart.data.datasets[0].backgroundColor = forcedTheme === 'light' 
+            ? 'rgba(37, 99, 235, 0.18)' 
+            : (forcedTheme === 'dark' ? 'rgba(56, 189, 248, 0.18)' : 'rgba(37, 99, 235, 0.18)');
+
+        radarChart.update('none');
+      }
+
+      function updateChart() {
+        if (!radarChart) return;
+        radarChart.data.datasets[0].data = METRICS.map((m) => state.metrics[m.key]);
+        radarChart.update('none');
+        
+        // Mise à jour de l'image pour le PDF "en direct" (optionnel, fait surtout au moment de l'export)
+        // Mais on ne force pas le thème ici, on garde le WYSIWYG
+        const imgPdf = document.getElementById('pdfRadar');
+        if (imgPdf) {
+          try {
+            imgPdf.src = radarChart.toBase64Image('image/png', 1);
+          } catch (e) {}
+        }
+      }
+
+      // ---------------------- TOTAL / PDF ----------------------
+      function updateTotal() {
+        let sum = 0;
+        SCORE_CATEGORIES.forEach((c) => {
+          sum += state.scores[c.id] || 0;
+        });
+        const totalText = sum + ' / 100';
+        const totalEl = document.getElementById('totalScore');
+        if (totalEl) totalEl.textContent = totalText;
+        const pdfTotalEl = document.getElementById('pdfTotal');
+        if (pdfTotalEl) pdfTotalEl.textContent = totalText;
+      }
+
+      function renderPicks() {
+        const host = document.getElementById('selectedAromas');
+        if (!host) return;
+        host.innerHTML = '';
+        state.picks.forEach((label) => {
+          const chip = document.createElement('span');
+          const fam = labelToFam[label] || '';
+          chip.className = 'chip' + (fam ? ' fam-' + fam : '');
+          chip.textContent = label;
+          chip.title = 'Cliquer pour supprimer';
+          chip.addEventListener('click', () => {
+            const idx = state.picks.indexOf(label);
+            if (idx >= 0) {
+              state.picks.splice(idx, 1);
+              renderPicks();
+              updatePreview();
+            }
+          });
+          host.appendChild(chip);
+        });
+
+        const pdfHost = document.getElementById('pdfAromas');
+        if (pdfHost) {
+          pdfHost.innerHTML = '';
+          state.picks.forEach((label) => {
+            const chipPdf = document.createElement('span');
+            const fam = labelToFam[label] || '';
+            chipPdf.className = 'chip' + (fam ? ' fam-' + fam : '');
+            chipPdf.textContent = label;
+            pdfHost.appendChild(chipPdf);
+          });
+        }
+      }
+
+      function updatePreview() {
+        const getVal = (id) => {
+          const el = document.getElementById(id);
+          return el && 'value' in el ? el.value : '';
+        };
+        const setText = (id, value) => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = value;
+        };
+
+        setText('pdfDate', getVal('fDate'));
+        setText('pdfName', getVal('fName'));
+        setText('pdfDistillery', getVal('fDistillery'));
+        setText('pdfBottler', getVal('fBottler'));
+        setText('pdfAge', getVal('fAge'));
+        setText('pdfVintage', getVal('fVintage'));
+        setText('pdfColor', getVal('fColor'));
+
+        const abvVal = getVal('fAbv');
+        setText('pdfAbv', abvVal ? abvVal + ' %' : '');
+
+        const notesEl = document.getElementById('fNotes');
+        const notesPdf = document.getElementById('pdfNotes');
+        if (notesPdf && notesEl) {
+          notesPdf.textContent = notesEl.value || '';
+        }
+
+        const flagsEl = document.getElementById('pdfFlags');
+        if (flagsEl) {
+          flagsEl.innerHTML = '';
+          const labels = {
+            Cask: 'Brut de fût',
+            Single: 'Fût unique',
+            Ncf: 'Non filtré à froid',
+            NoCol: 'Non coloré'
+          };
+          ['Cask', 'Single', 'Ncf', 'NoCol'].forEach((flag) => {
+            const input = document.getElementById('f' + flag);
+            if (input && input.checked) {
+              const span = document.createElement('span');
+              span.className = 'flag';
+              span.textContent = labels[flag];
+              flagsEl.appendChild(span);
+            }
+          });
+        }
+
+        const sectionsHost = document.getElementById('pdfNoteSections');
+        if (sectionsHost) {
+          sectionsHost.innerHTML = '';
+          const GROUPS = [
+            {
+              title: 'Apparence',
+              desc: 'Évaluer la viscosité (larmes), la brillance, et la limpidité du whisky.',
+              items: ['attrait']
+            },
+            {
+              title: 'Nez',
+              desc: "Juger l'intensité, la complexité et l'équilibre des arômes.",
+              items: ['nezInt', 'nezDist', 'nezEq']
+            },
+            {
+              title: 'Palais',
+              desc: 'Évaluer l\'équilibre des saveurs, la structure en bouche et la complexité.',
+              items: ['palAlc', 'palCorps', 'palEq', 'palComplex', 'palDist']
+            },
+            {
+              title: 'Finale',
+              desc: 'Mesurer la longueur et la qualité des saveurs après dégustation.',
+              items: ['finLen', 'finQual']
+            }
+          ];
+
+          GROUPS.forEach((grp) => {
+            const sec = document.createElement('div');
+            sec.className = 'pdf-section';
+
+            const h3 = document.createElement('h3');
+            h3.textContent = grp.title;
+            sec.appendChild(h3);
+
+            const p = document.createElement('p');
+            p.className = 'pdf-desc';
+            p.textContent = grp.desc;
+            sec.appendChild(p);
+
+            grp.items.forEach((id) => {
+              const cat = SCORE_CATEGORIES.find((c) => c.id === id);
+              if (!cat) return;
+              const row = document.createElement('div');
+              row.className = 'criteria-row';
+              const spLabel = document.createElement('span');
+              spLabel.textContent = cat.label;
+              const spVal = document.createElement('span');
+              const val = state.scores[cat.id] || 0;
+              spVal.textContent = val + ' / ' + cat.max;
+              row.appendChild(spLabel);
+              row.appendChild(spVal);
+              sec.appendChild(row);
+            });
+
+            sectionsHost.appendChild(sec);
+          });
+        }
+
+        updateTotal();
+        // On ne met pas à jour l'image du chart ici car pour l'export PDF,
+        // nous avons besoin d'une logique spécifique (force light mode).
+      }
+
+      // ---------------------- PALETTE D’ARÔMES / TOOLTIP ----------------------
+      const overlay = document.getElementById('paletteOverlay');
+      const palSearch = document.getElementById('palSearch');
+      const palResults = document.getElementById('palResults');
+      const palClose = document.getElementById('palClose');
+      const openPaletteBtn = document.getElementById('openPalette');
+      const tooltip = document.getElementById('tooltip');
+
+      function openOverlay() {
+        if (!overlay) return;
+        overlay.setAttribute('aria-hidden', 'false');
+        overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        if (palSearch) {
+          palSearch.value = '';
+        }
+        renderList('');
+        setTimeout(() => {
+          if (palSearch) palSearch.focus();
+        }, 10);
+      }
+
+      function closeOverlay() {
+        if (!overlay) return;
+        overlay.setAttribute('aria-hidden', 'true');
+        overlay.classList.remove('open');
+        document.body.style.overflow = '';
+        hideTip();
+      }
+
+      function renderList(q) {
+        if (!palResults) return;
+        const query = normalize(q);
+        palResults.innerHTML = '';
+        const items = FLAT.filter((x) => !query || normalize(x.label).includes(query) || normalize(x.path).includes(query));
+        items.forEach((x) => {
+          const row = document.createElement('div');
+          row.className = 'row';
+          row.setAttribute('role', 'option');
+          row.dataset.label = x.label;
+          const famCode = labelToFam[x.label] || '';
+          const famClass = famCode ? ' fam-' + famCode : '';
+          row.innerHTML = '<span class="leaf-badge' + famClass + '">' + x.label + '</span>' +
+            '<span class="path">— ' + x.path + '</span>';
+
+          if (state.picks.includes(x.label)) {
+            row.setAttribute('aria-selected', 'true');
+          }
+
+          row.addEventListener('click', () => {
+            const idx = state.picks.indexOf(x.label);
+            if (idx >= 0) {
+              state.picks.splice(idx, 1);
+            } else {
+              state.picks.push(x.label);
+            }
+            renderPicks();
+            updatePreview();
+            if (state.picks.includes(x.label)) {
+              row.setAttribute('aria-selected', 'true');
+            } else {
+              row.removeAttribute('aria-selected');
+            }
+          });
+
+          const mqlCoarse = window.matchMedia && window.matchMedia('(pointer: coarse)');
+          const isCoarse = mqlCoarse && mqlCoarse.matches;
+          if (!isCoarse && tooltip) {
+            row.addEventListener('mouseenter', (ev) => showTip(x.label, ev.clientX, ev.clientY));
+            row.addEventListener('mousemove', (ev) => moveTip(ev.clientX, ev.clientY));
+            row.addEventListener('mouseleave', hideTip);
+          }
+
+          palResults.appendChild(row);
+        });
+      }
+
+      if (palSearch) {
+        palSearch.addEventListener('input', (e) => {
+          renderList(e.target.value);
+        });
+      }
+
+      if (openPaletteBtn) openPaletteBtn.addEventListener('click', openOverlay);
+      if (palClose) palClose.addEventListener('click', closeOverlay);
+      if (overlay) {
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) closeOverlay();
+        });
+      }
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && overlay && overlay.getAttribute('aria-hidden') === 'false') {
+          closeOverlay();
+        }
+      });
+
+      function showTip(label, x, y) {
+        if (!tooltip) return;
+        const d = INFO[label] || { classe: '—', composés: '—', origine: '—', fut: '—', tips: '—', styles: '—' };
+        tooltip.innerHTML = '<h4>' + label + ' <small>• ' + d.classe + '</small></h4>' +
+          '<div class="line"><div class="k">Composés</div><div class="v">' + d.composés + '</div></div>' +
+          '<div class="line"><div class="k">Origine</div><div class="v">' + d.origine + '</div></div>' +
+          '<div class="line"><div class="k">Fût</div><div class="v">' + d.fut + '</div></div>' +
+          '<div class="line"><div class="k">Dégustation</div><div class="v">' + d.tips + '</div></div>' +
+          '<div class="line"><div class="k">Styles</div><div class="v">' + d.styles + '</div></div>';
+        tooltip.style.display = 'block';
+        tooltip.style.left = (x + 16) + 'px';
+        tooltip.style.top = (y - 24) + 'px';
+        tooltip.setAttribute('aria-hidden', 'false');
+      }
+
+      function moveTip(x, y) {
+        if (!tooltip || tooltip.style.display !== 'block') return;
+        tooltip.style.left = (x + 16) + 'px';
+        tooltip.style.top = (y - 24) + 'px';
+      }
+
+      function hideTip() {
+        if (!tooltip) return;
+        tooltip.style.display = 'none';
+        tooltip.setAttribute('aria-hidden', 'true');
+      }
+
+      const selectedAromasEl = document.getElementById('selectedAromas');
+      if (selectedAromasEl && tooltip) {
+        const mqlCoarse = window.matchMedia && window.matchMedia('(pointer: coarse)');
+        const isCoarse = mqlCoarse && mqlCoarse.matches;
+        if (!isCoarse) {
+          selectedAromasEl.addEventListener('mousemove', (e) => {
+            const chip = e.target.closest('.chip');
+            if (!chip) {
+              hideTip();
+              return;
+            }
+            const label = chip.textContent.trim();
+            const rect = chip.getBoundingClientRect();
+            showTip(label, rect.right, rect.top);
+          });
+          selectedAromasEl.addEventListener('mouseleave', hideTip);
+        }
+      }
+
+      // ---------------------- EXPORT PDF ----------------------
+      function initPdfExport() {
+        const btnPdf = document.getElementById('exportPdf');
+        if (!btnPdf) return;
+
+        const pdfDateSpan = document.getElementById('pdfGeneratedOn');
+        if (pdfDateSpan) {
+          pdfDateSpan.textContent = new Date().toLocaleDateString('fr-FR');
+        }
+
+        btnPdf.addEventListener('click', () => {
+          if (!window.html2pdf) {
+            alert("La librairie de génération PDF n'a pas pu être chargée. Vérifiez votre connexion ou rechargez la page.");
+            return;
+          }
+
+          updatePreview();
+          try {
+            window.scrollTo(0, 0);
+          } catch (e) {}
+
+          const pdfWrapper = document.getElementById('pdfTemplate');
+          if (!pdfWrapper) return;
+          
+          // 1. Capture de l'état actuel du graphique pour pouvoir le restaurer
+          // On regarde si le root a le data-theme dark pour savoir quoi restaurer plus tard
+          const currentTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+
+          // 2. Forcer le graphique en mode LIGHT
+          updateChartTheme('light');
+          // Mise à jour de l'image source pour le PDF avec le nouveau rendu
+          const imgPdf = document.getElementById('pdfRadar');
+          if (imgPdf && radarChart) {
+             imgPdf.src = radarChart.toBase64Image('image/png', 1);
+          }
+
+          // Positionnement pour la capture
+          pdfWrapper.style.display = 'block';
+          pdfWrapper.style.position = 'fixed';
+          pdfWrapper.style.left = '0';
+          pdfWrapper.style.top = '0';
+          pdfWrapper.style.zIndex = '1150';
+          pdfWrapper.style.background = '#ffffff';
+
+          const pdfElement = pdfWrapper.querySelector('.pdf-sheet') || pdfWrapper;
+
+          const nameVal = (document.getElementById('fName') || {}).value || '';
+          const slug = normalize(nameVal).replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'fiche';
+          const dateVal = (document.getElementById('fDate') || {}).value || new Date().toISOString().split('T')[0];
+          const filename = 'fiche-degustation-' + dateVal + '-' + slug + '.pdf';
+
+          const opt = {
+            margin: 10,
+            filename,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, logging: false, scrollX: 0, scrollY: 0 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+          };
+
+          startExportProgress();
+
+          // Délai pour le rendu du DOM et du Chart mis à jour
+          setTimeout(() => {
+            window.html2pdf().set(opt).from(pdfElement).save()
+              .then(() => {
+                // Restauration PDF DOM
+                pdfWrapper.style.display = 'none';
+                pdfWrapper.style.position = '';
+                pdfWrapper.style.zIndex = '';
+                pdfWrapper.style.background = '';
+                
+                // Restauration Chart Theme
+                updateChartTheme(currentTheme);
+
+                completeExportProgress(true);
+              })
+              .catch((err) => {
+                console.error("Erreur export PDF:", err);
+                pdfWrapper.style.display = 'none';
+                updateChartTheme(currentTheme);
+                completeExportProgress(false);
+              });
+          }, 500);
+        });
+      }
+
+      // ---------------------- RÉINITIALISATION ----------------------
+      function initReset() {
+        const resetBtn = document.getElementById('resetAll');
+        if (!resetBtn) return;
+        resetBtn.addEventListener('click', () => {
+          if (!confirm('Effacer tous les champs, notes et arômes ?')) return;
+
+          document.querySelectorAll('.input').forEach((inp) => { inp.value = ''; });
+          const fAbv = document.getElementById('fAbv');
+          if (fAbv) fAbv.value = '';
+          const fNotes = document.getElementById('fNotes');
+          if (fNotes) fNotes.value = '';
+          ['Cask', 'Single', 'Ncf', 'NoCol'].forEach((flag) => {
+            const el = document.getElementById('f' + flag);
+            if (el) el.checked = false;
+          });
+
+          METRICS.forEach((m) => {
+            state.metrics[m.key] = 5;
+            const slider = document.getElementById('m-' + m.key);
+            if (slider) {
+              slider.value = '5';
+              const out = slider.parentElement && slider.parentElement.querySelector('output');
+              if (out) out.textContent = '5';
+            }
+          });
+
+          SCORE_CATEGORIES.forEach((c) => {
+            state.scores[c.id] = 0;
+            // Le slider custom
+            const input = document.getElementById('s-' + c.id);
+            if (input) {
+              input.value = '0';
+              // Dispatch event pour trigger updateField
+              input.dispatchEvent(new Event('input'));
+            }
+          });
+
+          state.picks = [];
+          renderPicks();
+          updatePreview();
+        });
+      }
+
+      // ---------------------- INITIALISATION GLOBALE ----------------------
+      function initDateField() {
+        const dateInput = document.getElementById('fDate');
+        if (dateInput && !dateInput.value) {
+          dateInput.valueAsDate = new Date();
+        }
+      }
+
+      function initInfoListeners() {
+        const inputs = document.querySelectorAll('.input, #fNotes, .flags-grid input[type="checkbox"]');
+        inputs.forEach((el) => {
+          const evt = el.type === 'checkbox' ? 'change' : 'input';
+          el.addEventListener(evt, () => {
+            updatePreview();
+          });
+        });
+      }
+
+      function init() {
+        initTheme();
+        buildMetrics();
+        buildScores();
+        initRadarChart();
+        initExportOverlay();
+        initPdfExport();
+        initReset();
+        initDateField();
+        initInfoListeners();
+        renderPicks();
+        updatePreview();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
 </body>
 </html>
