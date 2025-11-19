@@ -876,10 +876,10 @@
       position: fixed;
       z-index: 1100;
       max-width: 280px;
-      background: rgba(255, 255, 255, 0.96);
+      background: var(--color-surface);
       color: var(--color-text);
       border-radius: 18px;
-      border: 1px solid rgba(148, 163, 184, 0.4);
+      border: 1px solid var(--color-border-subtle);
       padding: 12px 14px;
       font-size: 12px;
       box-shadow: 0 18px 40px rgba(15, 23, 42, 0.55);
@@ -2450,6 +2450,36 @@
         }
       });
 
+      function updateTipPosition(x, y) {
+        if (!tooltip) return;
+        const padding = 16;
+        const tipRect = tooltip.getBoundingClientRect();
+        const winW = window.innerWidth;
+        const winH = window.innerHeight;
+
+        let posX = x + padding;
+        let posY = y - 24; // Default slightly above/aligned with cursor
+
+        // Horizontal collision
+        if (posX + tipRect.width > winW - padding) {
+          posX = x - tipRect.width - padding;
+        }
+
+        // Vertical collision
+        // Check if it goes off bottom
+        if (posY + tipRect.height > winH - padding) {
+          // Flip up
+          posY = y - tipRect.height - padding;
+        }
+        // Check top edge
+        if (posY < padding) {
+           posY = padding;
+        }
+
+        tooltip.style.left = posX + 'px';
+        tooltip.style.top = posY + 'px';
+      }
+
       function showTip(label, x, y) {
         if (!tooltip) return;
         const d = INFO[label] || { classe: '—', composés: '—', origine: '—', fut: '—', tips: '—', styles: '—' };
@@ -2459,16 +2489,15 @@
           '<div class="line"><div class="k">Fût</div><div class="v">' + d.fut + '</div></div>' +
           '<div class="line"><div class="k">Dégustation</div><div class="v">' + d.tips + '</div></div>' +
           '<div class="line"><div class="k">Styles</div><div class="v">' + d.styles + '</div></div>';
+        
         tooltip.style.display = 'block';
-        tooltip.style.left = (x + 16) + 'px';
-        tooltip.style.top = (y - 24) + 'px';
         tooltip.setAttribute('aria-hidden', 'false');
+        updateTipPosition(x, y);
       }
 
       function moveTip(x, y) {
         if (!tooltip || tooltip.style.display !== 'block') return;
-        tooltip.style.left = (x + 16) + 'px';
-        tooltip.style.top = (y - 24) + 'px';
+        updateTipPosition(x, y);
       }
 
       function hideTip() {
